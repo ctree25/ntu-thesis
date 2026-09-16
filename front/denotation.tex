@@ -1,10 +1,36 @@
 % !TeX root = ../main.tex
 
+% !TeX root = ../main.tex
+
 \begin{denotation}[3cm]
 
-\item[OTQA]{
-  Open-Domain Table Question Answering
-}
+% Abbreviations
+\item[CTQA]{Closed-Domain Table Question Answering}
+\item[OTQA]{Open-Domain Table Question Answering}
+\item[OLTQA]{Open-Domain Large-Table Question Answering}
+\item[LLM]{Large Language Model}
+\item[RAG]{Retrieval-Augmented Generation}
+\item[BPE]{Byte-Pair Encoding}
+\item[SQL]{Structured Query Language}
 
+% Mathematical notation
+\item[$\mathcal{D}$]{Corpus of tables}
+\item[$N$]{Number of tables in the corpus}
+\item[$T$]{A table in the corpus}
+\item[$q$]{Natural-language query}
+\item[$a$]{Answer to the query}
+\item[$k$]{Candidate size: the number of candidate tables}
+\item[$T_i^q$]{The candidate table ranked $i$-th for query $q$}
+\item[$m$]{Number of columns in a table}
+\item[$c_j$]{The name of the $j$-th column in a table}
+\item[$I(T)$]{Schema-level table representation of table $T$}
+\item[$R$]{Table retriever}
+\item[$C$]{Table context construction function}
+\item[$G$]{Table reasoner}
+\item[$\alpha$]{Weight assigned to the normalized dense retrieval score in hybrid retrieval}
+
+% Evaluation metrics
+\item[Recall@$k$]{Proportion of queries for which the gold table appears among the top-$k$ retrieved candidate tables}
+\item[MG]{Marginal gain in Recall@$k$ per additional candidate table}
 
 \end{denotation}

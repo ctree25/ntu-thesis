@@ -1,13 +1,13 @@
 \chapter{Ablation Study and Analysis}
 \label{sec:analysis}
-\section{Candidate Depth Analysis}
+\section{Candidate Size Analysis}
 
 \begin{table}[t]
 \centering
 \small
 \begin{tabular}{cccc}
 \hline
-\textbf{Candidate Depth $k$} &
+\textbf{Candidate Size $k$} &
 \textbf{Accuracy} &
 \textbf{R@$k$} &
 \textbf{Input Tokens} \\
@@ -18,19 +18,19 @@
 20 & \textbf{0.60} & 0.95 & 12.35M \\
 \hline
 \end{tabular}
-\caption{Effect of candidate depth $k$ on end-to-end accuracy, table retrieval recall, and LLM input-token usage.}
+\caption{Effect of candidate size $k$ on end-to-end accuracy, table retrieval recall, and LLM input-token usage.}
 \label{tab:k_ablation}
 \end{table}
 
-Increasing the candidate depth improves gold-table coverage and provides the reasoner with more opportunities to access the correct table.
-Table~\ref{tab:k_ablation} reports end-to-end accuracy, table retrieval recall, and LLM input-token usage at different candidate depths.
+Increasing the candidate size improves gold-table coverage and provides the reasoner with more opportunities to access the correct table.
+Table~\ref{tab:k_ablation} reports end-to-end accuracy, table retrieval recall, and LLM input-token usage at different candidate sizes.
 Increasing $k$ from $1$ to $5$ improves retrieval recall from $0.65$ to $0.83$ and end-to-end accuracy from $0.47$ to $0.57$.
 At $k=10$, retrieval recall further increases to $0.91$, while accuracy reaches $0.60$.
 
-The benefit of increasing candidate depth exhibits diminishing returns.
+The benefit of increasing candidate size exhibits diminishing returns.
 Increasing $k$ allows more candidate tables, including the gold table, to remain accessible to the reasoner, but also introduces additional non-gold tables and increases the amount of information processed during reasoning.
 Notably, increasing $k$ from $10$ to $20$ does not further improve accuracy, which remains at $0.60$, while input-token usage increases substantially from $6.54$M to $12.35$M.
-The results therefore reveal a trade-off among gold-table coverage, reasoning difficulty, and inference cost when selecting the candidate depth.
+The results therefore reveal a trade-off among gold-table coverage, reasoning difficulty, and inference cost when selecting the candidate size.
 
 \section{Table Size Analysis}
 

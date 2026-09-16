@@ -1,1 +1,42 @@
 \chapter{Conclusion \& Limitations}
+\label{sec:conclusion}
+
+\section{Conclusion}
+
+We study Open-Domain Large-Table Question Answering (OLTQA), where systems must retrieve relevant tables from a corpus and reason over tables whose full serialization may exceed the LLM context window.
+To support public evaluation, we derive an OLTQA dataset from DataBench and evaluate table retrieval and end-to-end answer accuracy across four LLM backbones.
+We further evaluate our method on a real-world financial corpus to examine practical constraints and domain-specific challenges.
+
+Our method combines schema-level table representations for table retrieval with interactive multi-table reasoning.
+On DataBench, it achieves the highest end-to-end answer accuracy among the evaluated OTQA methods across all four LLM backbones.
+The retrieval results show that schema-level table representations are more effective than full-content table representations under the evaluated retrieval configurations.
+However, high gold-table coverage alone does not guarantee strong end-to-end performance.
+The interactive table access analysis highlights the importance of allowing the reasoner to obtain additional table information when the initial table context is insufficient.
+Increasing the candidate size improves gold-table coverage, but the accuracy gains diminish while input-token usage continues to increase.
+
+The real-world financial evaluation reveals additional challenges arising from similar table schemas, domain-specific semantics, and interaction with an operational database.
+The closed-domain results show that providing the gold table does not eliminate reasoning errors, while the gap between closed-domain and open-domain performance highlights the additional difficulty of retrieving and identifying the appropriate table.
+Overall, our results demonstrate the importance of addressing table retrieval and the reasoning stage jointly when developing OLTQA systems.
+
+\section{Limitations}
+
+Our study has several limitations.
+First, our evaluation covers one public benchmark with $80$ tables and one financial corpus with $572$ tables.
+Although these corpora contain large individual tables, they do not establish the effectiveness of our method over substantially larger table corpora.
+The evaluated queries also have a single-table answer requirement.
+Our multi-table reasoning design allows the reasoner to consider multiple retrieved candidate tables, but we do not evaluate queries that require combining information across tables or performing cross-table joins.
+
+Second, schema-level table representations exclude cell values from table retrieval.
+This design is effective on DataBench, but may miss relevant tables when the information needed to identify them is primarily contained in cell values.
+This limitation is particularly relevant to financial tables with similar schemas.
+Future work could incorporate selected cell-level information while controlling the cost of indexing and maintaining large, continuously updated tables.
+
+Third, interactive multi-table reasoning introduces a trade-off between answer accuracy and inference cost.
+Increasing the candidate size increases input-token usage without necessarily improving accuracy.
+The reasoner may also generate invalid operations or repeatedly fail to recover from tool-execution errors.
+Adaptive candidate selection, more efficient table context management, and improved error recovery are potential directions for improving efficiency and reliability.
+
+Finally, the derived open-domain evaluation setting contains queries that may not uniquely identify their intended tables.
+Automatic evaluation can also mark semantically valid answers as incorrect because of differences in answer formatting or numerical units.
+These issues complicate the interpretation of answer accuracy.
+Future evaluation could include clearer query specifications, annotations of alternative valid tables and answers, and more robust answer comparison.

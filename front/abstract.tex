@@ -1,12 +1,13 @@
-% !TeX root = ../main.tex
-
 \begin{abstract}
-中文摘要
-
+開放域表格問答（OTQA）需要從表格集合中檢索相關表格，並透過推理回答自然語言查詢。然而，既有方法主要在小型表格上進行評估，對大型表格的檢索與推理仍缺乏系統性研究。為填補此缺口，本研究基於 DataBench 建立開放域大型表格問答（OLTQA）的評估設定，並提出結合表格結構層級表示與互動式多表推理的方法。在 DataBench 上，本方法在四種大型語言模型下皆取得優於所比較 OTQA 方法的端到端答案正確率，同時維持相對較低的模型輸入量。消融與分析實驗進一步探討候選表格數量、表格表示與互動式表格存取對系統表現的影響。此外，我們在真實金融資料上進行評估，探討此方法在實務應用中的挑戰，並指出未來研究方向。
 \end{abstract}
 
 \begin{abstract*}
-
-Abstract
-
+Open-Domain Table Question Answering (OTQA) requires retrieving relevant tables from a corpus and reasoning over the retrieved tables to answer natural-language queries.
+Existing methods are evaluated primarily on small tables, leaving retrieval and reasoning over large tables underexplored.
+To address this gap, we derive an evaluation setting from DataBench for Open-Domain Large-Table Question Answering (OLTQA).
+We propose a pipeline that combines schema-level table representations with interactive multi-table reasoning.
+On DataBench, our method outperforms the evaluated OTQA baselines in end-to-end answer accuracy across four LLM backbones while maintaining competitive input-token usage.
+Ablation studies and analyses examine the effects of candidate size, table representation, and interactive table access on system performance.
+We further evaluate our method on a real-world financial corpus to investigate challenges arising in practical applications and identify directions for future research.
 \end{abstract*}

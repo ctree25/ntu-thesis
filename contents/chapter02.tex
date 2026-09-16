@@ -12,7 +12,7 @@ H-STAR~\cite{hstar} reduces the amount of table context processed during reasoni
 However, its extraction process remains constrained by the LLM context window and truncates table rows when the input exceeds the context limit.
 
 Other work has explicitly addressed reasoning over tables that cannot be directly accommodated within the LLM context.
-TableRAG~\cite{tablerag} more explicitly targets large-table reasoning by retrieving query-relevant schema and cell information from the table, avoiding the need to place the full table content in the reasoning context.
+TableRAG~\cite{tablerag} more explicitly targets large-table reasoning by retrieving query-relevant schema and cell information from the table, avoiding the need to place the full table content in the LLM context.
 
 Despite advances in large-table reasoning, CTQA methods assume that the gold table is already given.
 In practical applications, however, users may not know which table contains the information required to answer a query.
@@ -26,14 +26,14 @@ Unlike CTQA, OTQA systems first retrieve query-relevant tables from a corpus and
 Earlier OTQA methods relied on task-specific training for table retrieval and question answering~\cite{cltr,lirage}. With the emergence of large language models, subsequent approaches have increasingly adopted training-free pipelines for OTQA~\cite{opentab,craft}. CRAFT~\cite{craft}, for example, outperforms prior dataset-specific baselines without fine-tuning.
 
 CRAFT~\cite{craft} improves OTQA through cascaded table retrieval and reranking.
-For table reasoning, CRAFT constructs a compressed table context using the top query-relevant rows from the retrieved tables.
+For table reasoning, CRAFT constructs a compact table context using the top query-relevant rows from the retrieved tables.
 Although this design has been evaluated primarily on benchmarks with relatively small individual tables, the resulting table context may omit information required to answer the query when applied to large tables.
 Missing information in the table context can leave the reasoner with insufficient information to correctly derive the answer.
 
 OpenTab~\cite{opentab} explicitly considers scalability in OTQA.
 However, it does not systematically evaluate table retrieval and reasoning in a large-table setting.
 For table retrieval, OpenTab uses full table content to represent each table, which may incorporate substantial query-irrelevant cell-level information, dilute query-relevant semantic signals, and consequently reduce retrieval effectiveness when applied to large tables.
-For table reasoning, OpenTab similarly relies on a preconstructed table context, which may omit necessary information when applied to large tables and leave the reasoner with insufficient information to correctly derive the answer.
+For table reasoning, OpenTab similarly relies on a fixed table context, which may omit necessary information when applied to large tables and leave the reasoner with insufficient information to correctly derive the answer.
 
 Although existing OTQA systems have considered scalability, OTQA over large tables has not been systematically studied in terms of both table retrieval and reasoning.
 
@@ -49,11 +49,11 @@ To address this benchmark gap, we derive an OLTQA dataset from DataBench for ope
 \section{Open-Domain Text-to-SQL}
 Open-domain Text-to-SQL shares a similar pipeline with OTQA, as both tasks require identifying query-relevant tables and schema elements from a corpus before entering the reasoning stage~\cite{text2sql}.
 However, Text-to-SQL aims to generate an executable SQL program from a natural-language query, with the SQL program itself serving as the target output.
-In contrast, OTQA evaluates the correctness of the final answer, while SQL may serve as an intermediate tool for querying tables and supporting reasoning stage.
+In contrast, OTQA evaluates the correctness of the final answer, while SQL may serve as an intermediate tool for querying tables and supporting the reasoning stage.
 Due to this difference in task objective and output, we regard open-domain Text-to-SQL as a related retrieval and executable reasoning paradigm but do not provide an extensive review of this research area.
 
 \section{Retrieval-Augmented Generation (RAG)}
 OLTQA is closely related to retrieval-augmented generation (RAG), as both paradigms retrieve external information to support LLM reasoning.
 General RAG methods retrieve information from external knowledge sources and augment the language-model input with the retrieved content~\cite{rag,atlas}.
-While general RAG methods primarily operate over unstructured text, OLTQA applies the retrieval-augmented paradigm to structured tables and requires table-specific mechanisms for table retrieval, table context construction, and reasoning stage.
+While general RAG methods primarily operate over unstructured text, OLTQA applies the retrieval-augmented paradigm to structured tables and requires table-specific mechanisms for table retrieval, table context construction, and table reasoning.
 We therefore regard RAG as a broader methodological foundation of OLTQA while focusing our experimental comparison on methods specifically designed for table QA.

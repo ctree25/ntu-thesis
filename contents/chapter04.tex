@@ -47,7 +47,7 @@ s_{\mathrm{hybrid}}(q,I(T))
 
 where $s_{\mathrm{dense}}$ and $s_{\mathrm{sparse}}$ denote the normalized dense and sparse scores, respectively.
 We set $\alpha=0.5$.
-Given a query $q$, tables are ranked according to $s_{\mathrm{hybrid}}(q,I(T))$, and the top-$k$ tables are returned as candidate tables for reasoning stage.
+Given a query $q$, tables are ranked according to $s_{\mathrm{hybrid}}(q,I(T))$, and the top-$k$ tables are returned as candidate tables for the reasoning stage.
 
 \section{Table Reasoner}
 Our table reasoner builds upon the reasoning framework of TableRAG~\cite{tablerag}, in which an LLM agent interacts with a table programmatically to answer a given query.
@@ -59,14 +59,14 @@ Following TableRAG~\cite{tablerag}, we first perform query expansion to generate
 Schema retrieval retrieves query-relevant column names together with their data types and example values, while cell retrieval retrieves query-relevant column--value pairs.
 The retrieved schema information and cell values are then organized into the initial table context provided to the reasoner.
 
-\paragraph{Multi-table Reasoning.}
+\paragraph{Multi-Table Reasoning.}
 Rather than restricting the reasoner to the top-ranked table, we construct the initial table context using information from the top-$k$ retrieved candidate tables.
 This multi-table reasoning design allows the reasoner to determine which candidate table contains the information required to answer the query and provides an opportunity to recover from retrieval ranking errors when the gold table is retrieved but not ranked first.
 Increasing $k$ can improve the likelihood that the gold table is included among the candidate tables, but also increases the amount of information processed by the reasoner and the associated token usage.
-We analyze the trade-off among candidate coverage, reasoning performance, and token usage in Section~\ref{...}.
+We analyze the trade-off among gold-table coverage, reasoning performance, and token usage in Section~\ref{...}.
 
 \paragraph{Interactive Table Access.}
-Some existing OTQA methods construct a fixed table context before reasoning and rely on the preconstructed context throughout the reasoning process~\cite{opentab,craft}.
+Some existing OTQA methods construct a fixed table context before reasoning and rely on the fixed context throughout the reasoning process~\cite{opentab,craft}.
 When query-relevant information is omitted from the initial table context, the reasoner has no mechanism to access the omitted table information during reasoning.
 This limitation is particularly relevant to OLTQA, where large tables may require reducing the amount of table information provided to the reasoner.
 To reduce the dependence on the completeness of the initial table context, we retain the interactive table access mechanism of TableRAG~\cite{tablerag}.

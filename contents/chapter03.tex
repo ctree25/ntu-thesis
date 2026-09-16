@@ -28,16 +28,16 @@ a = G\bigl(q, C(q,R(q,\mathcal{D}))\bigr).
 \section{Large Table}
 \label{sec:large_table}
 Inspired by TableRAG~\cite{tablerag}, we consider a table large when its full serialization is impractical to provide directly to an LLM for reasoning.
-Directly serializing an entire table into the reasoning context provides the model with complete access to the table information.
+Directly serializing an entire table into the LLM context provides the model with complete access to the table information.
 However, as table size increases, full serialization becomes increasingly impractical: the resulting input may approach or exceed the context window of the LLM, while also introducing substantial query-irrelevant information and increasing inference cost.
 Therefore, reasoning over large tables generally requires reducing the amount of table information presented to the model rather than directly providing the complete table.
 
 This requirement introduces a central challenge in large-table reasoning.
 Reducing the amount of table context provided to the LLM may omit information required to answer the query. Such information loss can leave the reasoner with insufficient information to correctly derive the answer.
 
-More specifically, we define a table as large when its full serialization exceeds one million tokens, measured using a byte-pair encoding (BPE) tokenizer~\footnote{\url{https://github.com/openai/tiktoken}}.
+More specifically, we define a table as large when its full serialization contains at least one million tokens, measured using a byte-pair encoding (BPE) tokenizer~\footnote{\url{https://github.com/openai/tiktoken}}.
 We adopt this threshold because modern frontier LLMs commonly support context windows on the order of one million tokens~\footnote{\url{https://artificialanalysis.ai/models\#context-window}}.
-The threshold therefore serves as an operational boundary for identifying tables whose full serialization approaches or exceeds the practical scale of current LLM reasoning contexts.
+The threshold therefore serves as an operational boundary for identifying tables whose full serialization approaches or exceeds the practical scale of current LLM context windows.
 
 
 

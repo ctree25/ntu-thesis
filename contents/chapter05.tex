@@ -62,7 +62,7 @@ Unlike the original CTQA setting, where each question is associated with a given
 
 We further analyze the serialized table sizes to determine whether the DataBench corpus satisfies the large-table definition introduced in Section~\ref{sec:large_table}.
 Each table is serialized as CSV with column headers and without row indices, and token counts are computed using the \texttt{o200k\_base} BPE tokenizer~\footnote{\url{https://github.com/openai/tiktoken}}.
-As shown in Table~\ref{tab:databench_table_size}, $47.5\%$ of the tables contain at least one million tokens.
+$47.5\%$ of the tables contain at least one million tokens.
 The mean serialized table size is approximately $6.4$ million tokens.
 These results show that a substantial proportion of the corpus consists of large tables under our operational definition, making the derived DataBench suitable for evaluating OLTQA.
 
@@ -89,7 +89,7 @@ The final accuracy is computed as the proportion of questions whose predicted an
 \section{Experimental Setup}
 \subsection{LLM Configuration}
 
-We evaluate the OLTQA pipelines across four LLM backebones to examine whether the observed performance trends generalize across different model families and scales.
+We evaluate the OLTQA pipelines across four LLM backbones to examine whether the observed performance trends generalize across different model families and scales.
 Specifically, we evaluate GPT-5.6-Sol~\footnote{\url{https://developers.openai.com/api/docs/models/gpt-5.6-sol}},
 Gemini-3.7-Flash~\footnote{\url{https://deepmind.google/models/model-cards/gemini-3-7-flash/}},
 Qwen3.5-9B~\footnote{\url{https://huggingface.co/Qwen/Qwen3.5-9B}},
@@ -124,7 +124,7 @@ All subsequent OpenTab components remain unchanged.
 This controlled variant allows us to examine the effect of improving the initial table retrieval stage while keeping the remaining OpenTab pipeline unchanged.
 
 \textit{CRAFT}~\cite{craft} is a recent OTQA method that emphasizes high-quality table retrieval through a cascaded retrieval pipeline before providing a compact table context to an LLM for answer generation.
-We include CRAFT because its retrieval-oriented design and multi-candidate reasoning pipeline provide a strong comparison.
+We include CRAFT because its retrieval-oriented design and multi-table reasoning pipeline provide a strong comparison.
 
 \textit{Closed-domain setting} directly provides the gold table to the original TableRAG~\cite{tablerag} reasoner, removing corpus-level table retrieval errors.
 This setting serves as a diagnostic reference for evaluating reasoning stage performance when the gold table is given.

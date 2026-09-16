@@ -63,7 +63,7 @@ The retrieved schema information and cell values are then organized into the ini
 Rather than restricting the reasoner to the top-ranked table, we construct the initial table context using information from the top-$k$ retrieved candidate tables.
 This multi-table reasoning design allows the reasoner to determine which candidate table contains the information required to answer the query and provides an opportunity to recover from retrieval ranking errors when the gold table is retrieved but not ranked first.
 Increasing $k$ can improve the likelihood that the gold table is included among the candidate tables, but also increases the amount of information processed by the reasoner and the associated token usage.
-We analyze the trade-off among gold-table coverage, reasoning performance, and token usage in Section~\ref{...}.
+We analyze the trade-off among gold-table coverage, reasoning performance, and token usage in Section~\ref{sec:analysis}.
 
 \paragraph{Interactive Table Access.}
 Some existing OTQA methods construct a fixed table context before reasoning and rely on the fixed context throughout the reasoning process~\cite{opentab,craft}.

@@ -20,7 +20,7 @@ A typical OTQA pipeline consists of two stages: table retrieval and table reason
 The retrieval stage identifies candidate tables from the corpus, which are subsequently used by the reasoning stage to produce the final answer.
 
 However, existing OTQA methods are primarily studied on relatively small tables and may not scale effectively to large tables.
-During table retrieval, full-table representations may incorporate substantial query-irrelevant cell-level information, diluting query-relevant semantic signals and potentially reducing retrieval effectiveness.
+During table retrieval, full-content table representations may incorporate substantial query-irrelevant cell-level information, diluting query-relevant semantic signals and potentially reducing retrieval effectiveness.
 During table reasoning, large tables may be impractical to provide in full to the LLM, requiring the table information to be reduced before reasoning. However, the resulting table context may omit information required to answer the query, degrading reasoning quality and ultimately reducing end-to-end QA accuracy.
 
 To study the challenges introduced by large tables, we focus on Open-Domain Large-Table Question Answering (OLTQA).
@@ -41,7 +41,7 @@ Experimental results demonstrate that our proposed pipeline consistently outperf
 
 We further evaluate OLTQA in a real-world financial corpus.
 Unlike DataBench, the financial corpus consists of hundreds of tables from the same domain and is maintained in a continuously updated database. The real-world financial setting introduces practical constraints on content-dependent offline preprocessing and makes table discrimination particularly challenging when multiple tables share similar schemas.
-The financial-corpus evaluation complements DataBench by examining OLTQA under operational constraints and domain-specific ambiguity.
+The financial-corpus evaluation complements DataBench by examining OLTQA under practical constraints and domain-specific ambiguity.
 
 Through closed-domain experiments and qualitative error analysis, we further examine reasoning stage performance, identify major failure modes in current OLTQA pipelines, and characterize directions for future improvement.
 

@@ -55,22 +55,22 @@ Components shown in bold require full table contents to be materialized or proce
 
 Retrieval &
 Table representation &
-Title + headers &
-Title + headers &
-Stage 1: title + headers + \textbf{cell values}
+Table name + column names &
+Table name + column names &
+Stage 1: Table name + column names + \textbf{cell values}
 \newline
-Stages 2--3: title + headers +
+Stages 2--3: Table name + column names +
 \newline \textbf{retrieved rows} \\
 \hline
 
 Reasoning &
 Initial table context &
 Title +
-\newline retrieved headers +
+\newline retrieved column names +
 \newline \textbf{retrieved cells} &
-Title + headers + \textbf{retrieved rows} +
+Table name + column names + \textbf{retrieved rows} +
 \newline SQL execution result &
-Title + headers + \textbf{retrieved rows} \\
+Table name + column names + \textbf{retrieved rows} \\
 \hline
 
 \end{tabularx}
@@ -80,7 +80,7 @@ Bold components require full table contents to be materialized or processed offl
 \label{tab:practical_constraints}
 \end{table*}
 
-OpenTab+r requires row retrieval to construct the reasoning context, while CRAFT relies on cell values and retrieved rows during both table retrieval and reasoning.
+OpenTab+r requires row retrieval to construct the table context, while CRAFT relies on cell values and retrieved rows during both table retrieval and reasoning.
 Our approach requires cell retrieval to construct the initial table context.
 These dependencies become practically important in a large, continuously updated database, where maintaining content-dependent offline preprocessing and indexing can incur substantial storage and engineering costs.
 
@@ -99,20 +99,20 @@ Restricted-content & 0.60 & 0.22 & 0.16 \\
 $\Delta$            & $-0.01$ ($2\%$) & $-0.02$ ($8\%$) & $-0.04$ ($20\%$) \\
 \hline
 \end{tabular}
-\caption{Accuracy under the full and restricted-content settings on DataBench using Qwen3.5 9B. Percentages in parentheses indicate the relative accuracy decrease from the full setting.}
+\caption{Accuracy under the full and restricted-content settings on DataBench using Qwen3.5-9B. Percentages in parentheses indicate the relative accuracy decrease from the full setting.}
 \label{tab:restricted_content}
 \end{table}
 To examine the dependence of different OLTQA pipelines on offline processing of full table contents, we conduct a restricted-content evaluation on DataBench.
 For each method, we remove the components identified in Table~\ref{tab:practical_constraints} that require full table contents to be materialized, preprocessed, or indexed offline.
 The full setting retains the original pipeline configuration, whereas the restricted-content setting removes these full-content-dependent components.
 
-Table~\ref{tab:restricted_content} reports the results using Qwen3.5 9B.
+Table~\ref{tab:restricted_content} reports the results using Qwen3.5-9B.
 Our approach achieves an accuracy of $0.60$ under the restricted-content setting, decreasing by only $0.01$ from the full setting while remaining the best-performing method among the evaluated pipelines.
 Based on these results, we adopt our approach for the subsequent evaluation on the real-world financial corpus.
 
 \section{Experiments}
 \subsection{Experimental Setup}
-We use Qwen3.5 9B as the LLM backbone on the financial corpus.
+We use Qwen3.5-9B as the LLM backbone on the financial corpus.
 We use hybrid retrieval combining BM25 sparse retrieval with dense retrieval.
 Each table is represented using schema-level representation.
 For dense retrieval, we use \texttt{jinaai/jina-embeddings-v4}, which supports multilingual retrieval and is used to accommodate the Chinese dataset.

@@ -47,7 +47,7 @@ s_{\mathrm{hybrid}}(q,I(T))
 
 where $s_{\mathrm{dense}}$ and $s_{\mathrm{sparse}}$ denote the normalized dense and sparse scores, respectively.
 We set $\alpha=0.5$.
-Given a query $q$, tables are ranked according to $s_{\mathrm{hybrid}}(q,I(T))$, and the top-$k$ tables are returned as candidate tables for downstream reasoning.
+Given a query $q$, tables are ranked according to $s_{\mathrm{hybrid}}(q,I(T))$, and the top-$k$ tables are returned as candidate tables for reasoning stage.
 
 \section{Table Reasoner}
 Our table reasoner builds upon the reasoning framework of TableRAG~\cite{tablerag}, in which an LLM agent interacts with a table programmatically to answer a given query.
@@ -61,7 +61,7 @@ The retrieved schema information and cell values are then organized into the ini
 
 \paragraph{Multi-table Reasoning.}
 Rather than restricting the reasoner to the top-ranked table, we construct the initial table context using information from the top-$k$ retrieved candidate tables.
-This multi-candidate design allows the reasoner to determine which candidate table contains the information required to answer the query and provides an opportunity to recover from retrieval ranking errors when the gold table is retrieved but not ranked first.
+This multi-table reasoning design allows the reasoner to determine which candidate table contains the information required to answer the query and provides an opportunity to recover from retrieval ranking errors when the gold table is retrieved but not ranked first.
 Increasing $k$ can improve the likelihood that the gold table is included among the candidate tables, but also increases the amount of information processed by the reasoner and the associated token usage.
 We analyze the trade-off among candidate coverage, reasoning performance, and token usage in Section~\ref{...}.
 

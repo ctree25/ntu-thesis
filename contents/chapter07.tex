@@ -49,7 +49,7 @@ The results therefore reveal a trade-off among gold-table coverage, reasoning di
 & $<1$M & $\geq1$M
 & $<1$M & $\geq1$M \\
 \hline
-GPT-5.6 Sol
+GPT-5.6-Sol
 & 0.88 & 0.80
 & \textbf{0.62} & \textbf{0.55}
 & 0.39 & 0.29
@@ -61,7 +61,7 @@ Gemini-3.7 Flash
 & 0.39 & 0.31
 & 0.29 & 0.26 \\
 
-Qwen3.5 9B
+Qwen3.5-9B
 & 0.78 & 0.72
 & \textbf{0.63} & \textbf{0.57}
 & 0.23 & 0.25
@@ -113,13 +113,13 @@ Ours      & \textbf{6.54M} \\
 \label{tab:token_efficiency}
 \end{table}
 
-Our method remains competitive in LLM input-token usage despite performing multi-candidate and interactive reasoning.
+Our method remains competitive in LLM input-token usage despite performing interactive multi-table reasoning.
 Table~\ref{tab:token_efficiency} compares the total generative LLM input tokens consumed by the evaluated OLTQA pipelines.
 OpenTab~\cite{opentab} and OpenTab+r consume $19.31$M and $12.46$M input tokens, respectively, while CRAFT~\cite{craft} consumes $6.75$M.
 Our method consumes $6.54$M input tokens, remaining competitive with the evaluated baselines despite allowing the reasoner to interact with multiple candidate tables.
 
 This difference may partly reflect the additional LLM-based processing required by the baseline pipelines.
-OpenTab uses an LLM-based coder for SQL generation, while CRAFT uses LLM-based table enrichment before downstream answer generation.
+OpenTab uses an LLM-based coder for SQL generation, while CRAFT uses LLM-based table enrichment before the reasoning stage.
 In contrast, our pipeline does not require separate SQL-generation or table-enrichment stages.
 
 
@@ -136,7 +136,7 @@ Ours (Interactive) & \textbf{0.61} \\
 Ours (Static)      & 0.25 \\
 \hline
 \end{tabular}
-\caption{Ablation of interactive table access on DataBench using Qwen3.5 9B. The static variant disables access to additional table information during reasoning while retaining the same initial table context.}
+\caption{Ablation of interactive table access on DataBench using Qwen3.5-9B. The static variant disables access to additional table information during reasoning while retaining the same initial table context.}
 \label{tab:interactive_ablation}
 \end{table}
 

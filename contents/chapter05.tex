@@ -27,13 +27,13 @@ Open-WikiTable \cite{openwikitable} %&
     & 14 & 6 \\
 % DataBench \cite{databench} & \\
 \midrule
-Repurposed DataBench~\cite{databench} &  \textbf{46,325} & \textbf{23} \\
+Derived DataBench~\cite{databench} &  \textbf{46,325} & \textbf{23} \\
 \bottomrule
 \end{tabular}
 \end{table*}
 \begin{table}[t]
 \centering
-\caption{Distribution of serialized table sizes in the reformulated DataBench corpus.}
+\caption{Distribution of serialized table sizes in the derived DataBench corpus.}
 \label{tab:databench_table_size}
 \begin{tabular}{lr}
 \toprule
@@ -100,7 +100,7 @@ Specifically, GPT-5.6-Sol uses \texttt{reasoning\_effort=none}, while Gemini-3.7
 The same LLM configuration is used across all LLM-based components within each OLTQA pipeline.
 
 The Qwen models are served locally through vLLM with a maximum context length of $32$K tokens due to GPU memory constraints.
-For API-based models, we do not impose additional context-length restrictions beyond those of the respective APIs.
+For API-based models, we do not impose additional limitations on context length beyond those of the respective APIs.
 
 \subsection{Retriever Configuration}
 
@@ -126,8 +126,8 @@ This controlled variant allows us to examine the effect of improving the initial
 \textit{CRAFT}~\cite{craft} is a recent OTQA method that emphasizes high-quality table retrieval through a cascaded retrieval pipeline before providing a compact table context to an LLM for answer generation.
 We include CRAFT because its retrieval-oriented design and multi-candidate reasoning pipeline provide a strong comparison.
 
-\textit{Closed-Domain Setting} directly provides the gold table to the original TableRAG~\cite{tablerag} reasoner, removing corpus-level table retrieval errors.
-This setting serves as a diagnostic reference for evaluating downstream reasoning performance when the gold table is given.
+\textit{Closed-domain Setting} directly provides the gold table to the original TableRAG~\cite{tablerag} reasoner, removing corpus-level table retrieval errors.
+This setting serves as a diagnostic reference for evaluating reasoning stage performance when the gold table is given.
 
 Implementation details for the evaluated methods are provided in Section~\ref{sec:implementation_detail}.
 
@@ -240,7 +240,7 @@ Replacing OpenTab's original retriever with our table retriever improves its end
 This substantial improvement demonstrates the importance of table retrieval for end-to-end OLTQA performance.
 However, OpenTab+r still remains considerably below our method at $0.60$, suggesting that retrieval improvement alone does not account for the remaining performance gap.
 
-One limitation of OpenTab is that, after reranking the retrieved candidates, only the top-ranked table is retained for downstream reasoning.
+One limitation of OpenTab is that, after reranking the retrieved candidates, only the top-ranked table is retained for reasoning stage.
 Consequently, the reasoner cannot recover from a reranking error by considering other retrieved candidate tables.
 In addition, OpenTab relies on a preconstructed table context during reasoning.
 If query-relevant information is omitted from this context, the reasoner has no mechanism to dynamically access additional table information.

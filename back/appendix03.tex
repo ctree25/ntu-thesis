@@ -3,52 +3,52 @@
 \section{DataBench Error Examples}
 \label{sec:databench_error_ex}
 
-\begin{table}[H]
-\centering
-\small
-\begin{tabularx}{\textwidth}{
-    >{\raggedright\arraybackslash}p{2.3cm}
-    >{\raggedright\arraybackslash}X
-}
-\hline
-\textbf{Query} &
-What is the length of the longest text of a review (in chars)? \\
-\hline
+% \begin{table}[H]
+% \centering
+% \small
+% \begin{tabularx}{\textwidth}{
+%     >{\raggedright\arraybackslash}p{2.3cm}
+%     >{\raggedright\arraybackslash}X
+% }
+% \hline
+% \textbf{Query} &
+% What is the length of the longest text of a review (in chars)? \\
+% \hline
 
-\textbf{Gold table} &
-067\_TripAdvisor (retrieval rank: 11) \\
-\hline
+% \textbf{Gold table} &
+% 067\_TripAdvisor (retrieval rank: 11) \\
+% \hline
 
-\textbf{Gold schema} &
-\texttt{ratings, title, text, author, date\_stayed, offering\_id, ...} \\
-\hline
+% \textbf{Gold schema} &
+% \texttt{ratings, title, text, author, date\_stayed, offering\_id, ...} \\
+% \hline
 
-\textbf{Alternative tables} &
-061\_Disneyland (rank 1): \texttt{Review\_ID, Rating, Year\_Month, Reviewer\_Location, Review\_Text, Branch} \newline
-010\_ECommerce (rank 2): \texttt{Clothing ID, Age, Title, Review Text, Rating, ...} \\
-\hline
+% \textbf{Alternative tables} &
+% 061\_Disneyland (rank 1): \texttt{Review\_ID, Rating, Year\_Month, Reviewer\_Location, Review\_Text, Branch} \newline
+% 010\_ECommerce (rank 2): \texttt{Clothing ID, Age, Title, Review Text, Rating, ...} \\
+% \hline
 
-\textbf{Gold answer} &
-12592 \\
-\hline
+% \textbf{Gold answer} &
+% 12592 \\
+% \hline
 
-\textbf{Prediction} &
-20756, derived from 061\_Disneyland \\
-\hline
+% \textbf{Prediction} &
+% 20756, derived from 061\_Disneyland \\
+% \hline
 
-\textbf{Analysis} &
-The query does not contain a table-specific cue that uniquely identifies
-067\_TripAdvisor. Both 061\_Disneyland and 010\_ECommerce contain explicit
-review-text columns and therefore provide plausible interpretations of the
-query in the open-domain setting. \\
-\hline
-\end{tabularx}
+% \textbf{Analysis} &
+% The query does not contain a table-specific cue that uniquely identifies
+% 067\_TripAdvisor. Both 061\_Disneyland and 010\_ECommerce contain explicit
+% review-text columns and therefore provide plausible interpretations of the
+% query in the open-domain setting. \\
+% \hline
+% \end{tabularx}
 
-\caption{Representative open-domain ambiguity in the DataBench evaluation.
-The original closed-domain query does not uniquely identify its designated
-gold table after multiple tables become available.}
-\label{tab:databench_ambiguity_example}
-\end{table}
+% \caption{Representative open-domain ambiguity in the DataBench evaluation.
+% The original closed-domain query does not uniquely identify its designated
+% gold table after multiple tables become available.}
+% \label{tab:databench_ambiguity_example}
+% \end{table}
 
 \section{Financial Error Examples}
 \label{sec:financial_error_ex}

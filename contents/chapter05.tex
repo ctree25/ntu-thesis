@@ -1,0 +1,313 @@
+\chapter{Experiments}
+
+\section{Evaluation Dataset}
+
+\begin{table*}[t]
+\centering
+%\setlength{\tabcolsep}{14pt}
+%\renewcommand{\arraystretch}{1.15}
+\caption{Comparison of DataBench with existing OTQA datasets.
+DataBench contains substantially larger individual tables than existing OTQA benchmarks.}
+\label{tab:dataset_comparison}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Dataset} & 
+%\textbf{\# Table} &
+\textbf{Avg. \# Rows} &
+\textbf{Avg. \# Cols.} \\
+\midrule
+%Spider~\cite{yu-etal-2018-spider} & 5.1 & - & 27.6\\
+%\emph{Open-Domain Table QA}\\
+% TableBench~\cite{wu2025tablebench} 
+%& 3,681
+% & 7 & 17\\
+NQ-TABLES \cite{nqtables} %& 
+    & 11 & 6 \\
+Open-WikiTable \cite{openwikitable} %& 
+    & 14 & 6 \\
+% DataBench \cite{databench} & \\
+\midrule
+Repurposed DataBench~\cite{databench} &  \textbf{46,325} & \textbf{23} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+\begin{table}[t]
+\centering
+\caption{Distribution of serialized table sizes in the reformulated DataBench corpus.}
+\label{tab:databench_table_size}
+\begin{tabular}{lr}
+\toprule
+\textbf{Statistic} & \textbf{Size (Million Tokens)} \\
+\midrule
+Mean            & 6.40 \\
+Median          & 0.76 \\
+75th percentile & 5.05 \\
+90th percentile & 13.46 \\
+95th percentile & 22.87 \\
+Maximum         & 125.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The lack of an OTQA benchmark with substantially large individual tables motivates us to derive an open-domain evaluation setting from an existing large-table CTQA benchmark.
+Specifically, we use DataBench~\cite{databench}, which was originally designed for table question answering over real-world tabular datasets.
+
+Table~\ref{tab:dataset_comparison} compares the average table size of DataBench with existing OTQA benchmarks.
+NQ-TABLES~\cite{nqtables} and Open-WikiTable~\cite{openwikitable} contain relatively small individual tables, with approximately $11$ and $14$ rows per table on average, respectively.
+In contrast, DataBench contains approximately $46$K rows and $23$ columns per table on average, providing a substantially larger table scale for evaluating OLTQA.
+
+We construct the open-domain corpus using all $80$ tables available from the SemEval-2025 Task 8~\cite{semeval2025task8} release, and evaluate end-to-end OLTQA performance on the $522$ questions from the test set.
+The original DataBench consists of $65$ real-world tables, while SemEval-2025 Task 8 additionally provides a test set containing $15$ tables and $522$ query--answer pairs.
+Unlike the original CTQA setting, where each question is associated with a given gold table, our open-domain setting pools all $80$ tables into a shared corpus and requires the system to retrieve tables before producing the final answer.
+
+We further analyze the serialized table sizes to determine whether the DataBench corpus satisfies the large-table definition introduced in Section~\ref{sec:large_table}.
+Each table is serialized as CSV with column headers and without row indices, and token counts are computed using the \texttt{o200k\_base} BPE tokenizer~\footnote{\url{https://github.com/openai/tiktoken}}.
+As shown in Table~\ref{tab:databench_table_size}, $47.5\%$ of the tables contain at least one million tokens.
+The mean serialized table size is approximately $6.4$ million tokens.
+These results show that a substantial proportion of the corpus consists of large tables under our operational definition, making the derived DataBench suitable for evaluating OLTQA.
+
+\paragraph{Open-Domain Retrievability Check.}
+Because the DataBench questions were originally written under a closed-domain setting, pooling all tables into a shared corpus may introduce ambiguity for questions that do not contain sufficient information to distinguish their gold tables.
+For example, a question such as ``What is the average age?'' may be answerable when the target table is given, but may not uniquely identify the intended table when multiple tables contain an age attribute.
+We therefore conduct a retrieval sanity check using our hybrid retriever to examine whether the annotated gold tables remain practically retrievable in the derived open-domain setting.
+On the $522$ test questions, the retriever achieves Recall@1, Recall@5, and Recall@10 of $0.65$, $0.83$, and $0.91$, respectively.
+In particular, the annotated gold table can be recovered within the top-$10$ candidates for $91\%$ of the test questions, indicating that the gold tables remain practically retrievable for most questions in the derived open-domain setting.
+Nevertheless, retrieval success does not rule out ambiguity among multiple plausible tables; we further examine cases of ambiguity in the error analysis in Section~\ref{sec:error_analysis}.
+
+\section{Evaluation Metrics}
+
+We evaluate end-to-end OLTQA performance using answer accuracy and table retrieval performance using Recall@$k$.
+
+For end-to-end evaluation, we follow the official DataBench evaluator used in SemEval-2025 Task 8~\cite{semeval2025task8} and report answer accuracy as the primary evaluation metric.
+Rather than relying on generic exact string matching, the evaluator applies type-specific comparison rules according to the expected answer type.
+Boolean answers are normalized to equivalent true/false expressions, categorical answers are compared after normalization, and numerical answers are normalized and truncated to two decimal places before comparison.
+For list-valued answers, the evaluator applies the corresponding element-level normalization and compares the lists without considering element order.
+The final accuracy is computed as the proportion of questions whose predicted answers are judged correct by the evaluator.
+
+% For table retrieval, we report Recall@$k$, which measures the proportion of questions for which the annotated gold table appears among the top-$k$ retrieved candidate tables.
+
+\section{Experimental Setup}
+\subsection{LLM Configuration}
+
+We evaluate the OLTQA pipelines across four LLM configurations to examine whether the observed performance trends generalize across different model families and scales.
+Specifically, we evaluate GPT-5.6-Sol~\footnote{\url{https://developers.openai.com/api/docs/models/gpt-5.6-sol}},
+Gemini-3.7-Flash~\footnote{\url{https://deepmind.google/models/model-cards/gemini-3-7-flash/}},
+Qwen3.5-9B~\footnote{\url{https://huggingface.co/Qwen/Qwen3.5-9B}},
+and Qwen3.5-4B~\footnote{\url{https://huggingface.co/Qwen/Qwen3.5-4B}}.
+
+For models that expose configurable reasoning effort, we use the minimum available setting to ensure a consistent comparison across OLTQA pipelines, rather than optimizing each pipeline for its best possible performance.
+Specifically, GPT-5.6-Sol uses \texttt{reasoning\_effort=none}, while Gemini-3.7-Flash uses \texttt{thinking=low}.
+The same LLM configuration is used across all LLM-based components within each OLTQA pipeline.
+
+The Qwen models are served locally through vLLM with a maximum context length of $32$K tokens due to GPU memory constraints.
+For API-based models, we do not impose additional context-length restrictions beyond those of the respective APIs.
+
+\subsection{Retriever Configuration}
+
+Our table retriever combines BM25 sparse retrieval with dense retrieval using \texttt{sentence-transformers/all-mpnet-base-v2}~\footnote{\url{https://huggingface.co/sentence-transformers/all-mpnet-base-v2}}.
+We use the same dense encoder employed in one stage of CRAFT's cascaded retrieval pipeline to reduce differences attributable to the choice of dense embedding model when comparing the retrieval methods.
+
+For the baseline methods, we retain their original retrieval configurations.
+OpenTab uses BM25 for initial table retrieval.
+CRAFT employs its cascaded retrieval pipeline, which progressively filters candidate tables using SPLADE~\cite{splade}, \texttt{sentence-transformers/all-mpnet-base-v2}, and \texttt{text-embedding-3-large}~\footnote{\url{https://developers.openai.com/api/docs/models/text-embedding-3-large}} across successive retrieval stages.
+
+\section{Baselines}
+
+We compare our method with two representative OTQA pipelines, a retrieval-enhanced variant, and a closed-domain setting.
+
+\textit{OpenTab}~\cite{opentab} is an OTQA pipeline that combines table retrieval with SQL-guided reranking and reasoning.
+We include OpenTab because it explicitly targets scalability to large tables in OTQA, making it a particularly relevant baseline for our OLTQA setting.
+
+\textit{OpenTab+r} is a variant of \textit{OpenTab}.
+We replace OpenTab's initial retriever with our table retriever described in Section~\ref{sec:method}.
+All subsequent OpenTab components remain unchanged.
+This controlled variant allows us to examine the effect of improving the initial table retrieval stage while keeping the remaining OpenTab pipeline unchanged.
+
+\textit{CRAFT}~\cite{craft} is a recent OTQA method that emphasizes high-quality table retrieval through a cascaded retrieval pipeline before providing a compact table context to an LLM for answer generation.
+We include CRAFT because its retrieval-oriented design and multi-candidate reasoning pipeline provide a strong comparison.
+
+\textit{Closed-Domain Setting} directly provides the gold table to the original TableRAG~\cite{tablerag} reasoner, removing corpus-level table retrieval errors.
+This setting serves as a diagnostic reference for evaluating downstream reasoning performance when the gold table is given.
+
+Implementation details for the evaluated methods are provided in Section~\ref{sec:implementation_detail}.
+
+\section{Candidate Size Selection}
+\begin{table}[t]
+\centering
+\caption{Development-set retrieval performance for candidate-size selection. Marginal gain measures the increase in Recall@$k$ per additional candidate table between consecutive reported candidate sizes.}
+\label{tab:candidate_size_selection}
+\begin{tabular}{ccccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{Ours / OpenTab+r}} 
+& \multicolumn{2}{c}{\textbf{CRAFT}} \\
+\cmidrule(lr){2-3}
+\cmidrule(lr){4-5}
+\textbf{$k$}
+& \textbf{Recall@$k$}
+& \textbf{Marginal Gain}
+& \textbf{Recall@$k$}
+& \textbf{Marginal Gain} \\
+\midrule
+1  & 0.61 & --     & 0.55 & --     \\
+3  & 0.85 & 0.1203 & 0.76 & 0.1050 \\
+5  & 0.92 & 0.0313 & 0.83 & 0.0350 \\
+10 & 0.97 & 0.0100 & 0.91 & 0.0160 \\
+20 & 0.98 & 0.0016 & 0.96 & 0.0050 \\
+\bottomrule
+\end{tabular}
+\end{table}
+The role of the candidate size $k$ differs across methods because of their different retrieval and reasoning architectures.
+For our method and CRAFT, $k$ denotes the number of candidate tables retained for reasoning.
+In OpenTab, $k$ instead denotes the number of initially retrieved candidates passed to the reranking stage, after which only the top-ranked table is used for reasoning.
+
+We select $k$ based on the saturation of retrieval coverage on the DataBench development set rather than end-to-end question-answering accuracy.
+The development set contains $320$ queries over the same corpus of $80$ tables.
+Prior work has shown that increasing the number of retrieved candidates exhibits diminishing returns and introduces a trade-off between candidate coverage and reasoning cost~\cite{craft}.
+To quantify the incremental retrieval benefit, we define the marginal gain between two candidate sizes $k_1$ and $k_2$ as
+
+\[
+\operatorname{MG}(k_1,k_2)
+=
+\frac{\operatorname{Recall}@k_2-\operatorname{Recall}@k_1}
+{k_2-k_1}.
+\]
+
+Both our retriever and CRAFT's retriever exhibit diminishing marginal gains as the candidate size increases, as shown in Table~\ref{tab:candidate_size_selection}.
+Our method and OpenTab+r share the same initial hybrid retriever and therefore use the same retrieval curve for candidate-size selection.
+For our retriever, Recall@$k$ increases from $0.61$ at $k=1$ to $0.97$ at $k=10$, while the marginal gain decreases from $0.1203$ between $k=1$ and $k=3$ to $0.0016$ between $k=10$ and $k=20$.
+CRAFT exhibits a similar saturation pattern, with Recall@$k$ increasing from $0.55$ at $k=1$ to $0.91$ at $k=10$, followed by a substantially smaller marginal gain beyond $k=10$.
+
+Based on the diminishing retrieval gains beyond $k=10$, we select $k=10$ as the operating point for our method and CRAFT.
+We use $k=10$ for both OpenTab and OpenTab+r to ensure a consistent comparison between the two variants.
+
+\section{Main Results}
+\begin{table*}[t]
+\centering
+\caption{End-to-end answer accuracy on DataBench across different LLM backbones.
+Bold indicates the best OTQA performance for each LLM configuration.
+The closed-domain setting is reported as a diagnostic reference in which the gold table is directly provided to the reasoner.
+A dash indicates that the corresponding experiment was not conducted.}
+\label{tab:main_results}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{LLM} &
+\textbf{Closed-Domain} &
+\textbf{Ours} &
+\textbf{OpenTab} &
+\textbf{OpenTab+r} &
+\textbf{CRAFT} \\
+\midrule
+GPT-5.6-Sol
+& \textit{0.86}
+& \textbf{0.60}
+& 0.17
+& 0.36
+& 0.27 \\
+
+Gemini-3.7-Flash
+& \textit{0.80}
+& \textbf{0.55}
+& --
+& 0.37
+& 0.28 \\
+
+Qwen3.5-9B
+& \textit{0.76}
+& \textbf{0.61}
+& --
+& 0.24
+& 0.20 \\
+
+Qwen3.5-4B
+& \textit{0.75}
+& \textbf{0.59}
+& --
+& 0.22
+& 0.22 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\paragraph{Our method consistently achieves the strongest end-to-end performance across all evaluated LLM backbones.}
+As shown in Table~\ref{tab:main_results}, our method achieves the highest end-to-end accuracy among the evaluated OTQA methods across all four LLM configurations.
+For GPT-5.6-Sol, our method achieves an accuracy of $0.60$, compared with $0.36$ for the strongest baseline, OpenTab+r.
+Similar performance advantages are observed with Gemini-3.7-Flash and both Qwen3.5 models.
+These results show that the performance advantage of our pipeline is consistent across different model families and scales.
+
+\paragraph{Improving table retrieval alone is insufficient for strong OLTQA performance.}
+Replacing OpenTab's original retriever with our table retriever improves its end-to-end accuracy from $0.17$ to $0.36$ under GPT-5.6-Sol.
+This substantial improvement demonstrates the importance of table retrieval for end-to-end OLTQA performance.
+However, OpenTab+r still remains considerably below our method at $0.60$, suggesting that retrieval improvement alone does not account for the remaining performance gap.
+
+One limitation of OpenTab is that, after reranking the retrieved candidates, only the top-ranked table is retained for downstream reasoning.
+Consequently, the reasoner cannot recover from a reranking error by considering other retrieved candidate tables.
+In addition, OpenTab relies on a preconstructed table context during reasoning.
+If query-relevant information is omitted from this context, the reasoner has no mechanism to dynamically access additional table information.
+This limitation is relevant to large-table reasoning because a compact preconstructed context may omit information required to answer the query.
+
+CRAFT provides further evidence that strong table retrieval alone does not guarantee strong end-to-end OLTQA performance.
+As shown in Table~\ref{tab:retrieval_results}, CRAFT achieves retrieval recall comparable to our method, with Recall@10 of $0.92$ and $0.91$, respectively.
+However, its end-to-end accuracy remains substantially lower across all evaluated LLM backbones (Table~\ref{tab:main_results}).
+CRAFT also constructs a fixed table context for reasoning using the full table headers and the top-$5$ query-relevant rows from each candidate table.
+Similar to OpenTab, once this context has been constructed, the reasoner cannot dynamically access table information omitted from the context.
+In contrast, our reasoner can interactively access additional information from the candidate tables during reasoning.
+
+Taken together, these results suggest that retrieving the gold table alone is insufficient for strong OLTQA performance.
+Retaining multiple candidate tables during reasoning can improve gold-table coverage.
+Moreover, even when the gold table is available to the reasoner, the provided table context must contain sufficient query-relevant information.
+An insufficient table context may lack information required to answer the query and consequently lead to reasoning errors.
+When the initially constructed table context is incomplete, providing a mechanism to access additional table information during reasoning allows the reasoner to obtain missing information as needed.
+
+\section{Table Retrieval Results}
+
+\begin{table*}[t]
+\centering
+\caption{Table retrieval performance on DataBench.
+R@$k$ denotes the proportion of queries for which the gold table appears within the top-$k$ retrieved candidates.
+Hybrid retrieval combines BM25 sparse retrieval with Transformer-based dense retrieval.
+CRAFT uses a cascaded retrieval pipeline with stage-dependent retrieval strategies and table representations.}
+\label{tab:retrieval_results}
+\begin{tabular}{lllcccc}
+\toprule
+\textbf{Method} &
+\textbf{Retriever} &
+\textbf{Table Representation} &
+\textbf{R@1} &
+\textbf{R@3} &
+\textbf{R@5} &
+\textbf{R@10} \\
+\midrule
+OpenTab~\cite{opentab}
+& BM25
+& Full-content
+& 0.04 & 0.07 & 0.09 & 0.14 \\
+
+OpenTab+r
+& Hybrid
+& Full-content
+& 0.19 & 0.34 & 0.45 & 0.61 \\
+
+CRAFT~\cite{craft}
+& Cascaded
+& Stage-dependent
+& 0.56 & \textbf{0.78} & \textbf{0.86} & \textbf{0.92} \\
+\midrule
+Ours
+& Hybrid
+& Schema-level
+& \textbf{0.65} & 0.77 & 0.83 & 0.91 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Both the retrieval algorithm and table representation substantially affect table retrieval performance.}
+Table~\ref{tab:retrieval_results} compares the retrieval performance of different configurations on DataBench.
+OpenTab's original BM25 retriever with a full-content table representation achieves only $0.04$ Recall@1 and $0.14$ Recall@10.
+Replacing BM25 with a hybrid retrieval strategy while retaining the full-content table representation substantially improves Recall@1 to $0.19$ and Recall@10 to $0.61$, showing that the retrieval algorithm itself is an important factor.
+
+However, replacing the full-content table representation with the schema-level table representation further increases Recall@1 to $0.65$ and Recall@10 to $0.91$.
+This result suggests that including large amounts of cell-level content in the retrieval representation may introduce query-irrelevant information and weaken the table-level semantic signal, a concern that becomes particularly relevant for large tables due to their substantially larger volume of cell-level content.
+In contrast, a schema-level representation provides a more focused representation for table identification.
+
+Overall, the results highlight the importance of both the retrieval algorithm and table representation for table retrieval in OLTQA.

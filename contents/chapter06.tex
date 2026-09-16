@@ -1,0 +1,182 @@
+\chapter{Evaluation on a Real-World Financial Corpus}
+
+\section{Motivation and Application Scenario}
+
+In real-world financial data environments, users often need to locate and query information from a large collection of financial tables.
+The financial software considered in this study provides users with access to hundreds of tables for investment decision support.
+In practice, users may need to determine where particular financial information is stored, identify the appropriate table, and formulate queries over the underlying data.
+For users without sufficient familiarity with the available tables or their schemas, directly locating the appropriate table and constructing structured queries can be difficult.
+
+This scenario naturally motivates an OLTQA system that allows users to express their information needs in natural language, retrieves candidate tables from the financial data corpus, and reasons over the retrieved tables to produce the final answer.
+Motivated by this practical application scenario, we further evaluate our OLTQA framework on a real-world financial corpus.
+
+\section{Chinese Financial Data Corpus}
+The Chinese financial corpus consists of $572$ tables stored in a cloud-hosted database and $283$ Chinese natural-language questions collected from practical financial information needs.
+Unlike DataBench, where tables are provided as static files, the financial tables are maintained in an operational database and can be continuously updated over time.
+
+The corpus also differs substantially from DataBench in corpus size.
+While the DataBench evaluation contains $80$ tables, the financial corpus contains $572$ tables, requiring the system to identify the appropriate table from a considerably larger candidate space.
+
+\section{Practical Constraints of Existing OLTQA Pipelines}
+
+The real-world financial corpus introduces practical constraints that are not present in the static-file setting of DataBench.
+The financial tables are large and maintained in a continuously updated online database.
+Components that depend on full table contents therefore require large amounts of data to be materialized and processed offline, while database updates may further require the corresponding representations or indexes to be maintained.
+
+The scale of the financial corpus makes content-level indexing particularly costly.
+The $572$ financial tables contain approximately $95.5$ million rows in total.
+Even without considering cell retrieval, supporting row-level retrieval alone would require indexing every row across all tables.
+This would result in hundreds of GiB of storage for $1{,}024$-dimensional embeddings and could approach $1$ TiB after accounting for representation precision and indexing overhead.
+Although technically feasible, maintaining such a content-level index for a continuously updated database introduces substantial storage and engineering costs.
+
+These practical constraints affect OLTQA components that require offline materialization, preprocessing, or indexing of full table contents.
+Table~\ref{tab:practical_constraints} compares these dependencies across the evaluated OLTQA pipelines.
+Components shown in bold require full table contents to be materialized or processed offline.
+
+\begin{table*}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}p{1.4cm}
+    >{\raggedright\arraybackslash}p{2.7cm}
+    >{\raggedright\arraybackslash}p{3.4cm}
+    >{\raggedright\arraybackslash}p{3.5cm}
+    >{\raggedright\arraybackslash}X
+}
+\hline
+\textbf{Stage} &
+\textbf{Component} &
+\textbf{Ours} &
+\textbf{OpenTab+r} &
+\textbf{CRAFT} \\
+\hline
+
+Retrieval &
+Table representation &
+Title + headers &
+Title + headers &
+Stage 1: title + headers + \textbf{cell values}
+\newline
+Stages 2--3: title + headers +
+\newline \textbf{retrieved rows} \\
+\hline
+
+Reasoning &
+Initial table context &
+Title +
+\newline retrieved headers +
+\newline \textbf{retrieved cells} &
+Title + headers + \textbf{retrieved rows} +
+\newline SQL execution result &
+Title + headers + \textbf{retrieved rows} \\
+\hline
+
+\end{tabularx}
+
+\caption{Comparison of content dependencies across OLTQA pipelines.
+Bold components require full table contents to be materialized or processed offline.}
+\label{tab:practical_constraints}
+\end{table*}
+
+OpenTab+r requires row retrieval to construct the reasoning context, while CRAFT relies on cell values and retrieved rows during both table retrieval and reasoning.
+Our approach requires cell retrieval to construct the initial table context.
+These dependencies become practically important in a large, continuously updated database, where maintaining content-dependent offline preprocessing and indexing can incur substantial storage and engineering costs.
+
+
+\subsection{Restricted-Content Evaluation}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lccc}
+\hline
+\textbf{Setting} & \textbf{Ours} & \textbf{OpenTab+r} & \textbf{CRAFT} \\
+\hline
+Full               & 0.61 & 0.24 & 0.20 \\
+Restricted-content & 0.60 & 0.22 & 0.16 \\
+\hline
+$\Delta$            & $-0.01$ ($2\%$) & $-0.02$ ($8\%$) & $-0.04$ ($20\%$) \\
+\hline
+\end{tabular}
+\caption{Accuracy under the full and restricted-content settings on DataBench using Qwen3.5 9B. Percentages in parentheses indicate the relative accuracy decrease from the full setting.}
+\label{tab:restricted_content}
+\end{table}
+To examine the dependence of different OLTQA pipelines on offline processing of full table contents, we conduct a restricted-content evaluation on DataBench.
+For each method, we remove the components identified in Table~\ref{tab:practical_constraints} that require full table contents to be materialized, preprocessed, or indexed offline.
+The full setting retains the original pipeline configuration, whereas the restricted-content setting removes these full-content-dependent components.
+
+Table~\ref{tab:restricted_content} reports the results using Qwen3.5 9B.
+Our approach achieves an accuracy of $0.60$ under the restricted-content setting, decreasing by only $0.01$ from the full setting while remaining the best-performing method among the evaluated pipelines.
+Based on these results, we adopt our approach for the subsequent evaluation on the real-world financial corpus.
+
+\section{Experiments}
+\subsection{Experimental Setup}
+We use Qwen3.5 9B as the LLM backbone on the financial corpus.
+We use hybrid retrieval combining BM25 sparse retrieval with dense retrieval.
+Each table is represented using schema-level representation.
+For dense retrieval, we use \texttt{jinaai/jina-embeddings-v4}, which supports multilingual retrieval and is used to accommodate the Chinese dataset.
+
+\subsection{Evaluation Metric}
+We evaluate answer accuracy using whitespace-normalized exact match.
+Before comparison, all whitespace characters are removed from both the predicted answer and the reference answer.
+A prediction is considered correct only when the resulting strings exactly match.
+
+\subsection{Candidate Size Selection}
+
+We select the number of candidate tables $k$ using five-fold cross-validation over the $283$ financial queries.
+For each fold, table retrieval is evaluated on the held-out split using Recall@$k$ at different candidate sizes.
+Following the marginal-gain criterion described previously, we select $k$ based on the improvement in retrieval recall per additional candidate table.
+Table~\ref{tab:cmoney_candidate_selection} reports the mean and standard deviation of Recall@$k$ across the five test folds, together with the marginal gain between consecutive candidate sizes.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{ccc}
+\hline
+\textbf{Candidate Size $k$} &
+\textbf{Recall@$k$} &
+\textbf{Marginal Gain} \\
+\hline
+1  & $0.3360 \pm 0.0621$ & -- \\
+3  & $0.4311 \pm 0.0743$ & $0.0476$ \\
+5  & $0.5160 \pm 0.0679$ & $0.0425$ \\
+10 & $0.5937 \pm 0.0508$ & $0.0155$ \\
+15 & $0.6681 \pm 0.0584$ & $0.0149$ \\
+\textbf{20} & $\mathbf{0.7524 \pm 0.0370}$ & $\mathbf{0.0169}$ \\
+30 & $0.7949 \pm 0.0379$ & $0.0043$ \\
+40 & $0.8374 \pm 0.0340$ & $0.0043$ \\
+50 & $0.8481 \pm 0.0266$ & $0.0011$ \\
+\hline
+\end{tabular}
+\caption{Table retrieval performance for different candidate sizes on the financial corpus. Recall@$k$ reports the mean and standard deviation across five held-out folds. Marginal gain denotes the increase in mean recall per additional candidate table relative to the preceding candidate size.}
+\label{tab:cmoney_candidate_selection}
+\end{table}
+
+The marginal gain decreases substantially after $k=20$, from $0.0169$ between $k=15$ and $k=20$ to $0.0043$ between $k=20$ and $k=30$.
+We therefore set $k=20$ for the subsequent experiments.
+\subsection{Main Results}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\hline
+\textbf{Dataset} & \textbf{Closed-domain} & \textbf{Ours} \\
+\hline
+DataBench        & \textit{0.76} & 0.61 \\
+Financial corpus & \textit{0.45} & 0.21 \\
+\hline
+\end{tabular}
+\caption{Accuracy on DataBench and the real-world financial corpus. In the closed-domain setting, the gold table is directly provided to the reasoner.}
+\label{tab:financial_main_results}
+\end{table}
+
+Table~\ref{tab:financial_main_results} presents the main results on the real-world financial corpus.
+Our approach achieves an accuracy of $0.21$ when applied to the financial corpus.
+However, the performance is substantially lower than that observed on DataBench.
+
+The closed-domain setting achieves an accuracy of $0.45$.
+The lower closed-domain performance on the financial corpus compared with DataBench indicates that the performance gap cannot be attributed solely to table retrieval errors.
+The financial corpus differs from DataBench in several aspects that may increase task difficulty, including a larger and more domain-specific candidate space with highly similar financial tables, as well as a more complex interaction interface for accessing the underlying database.
+We further examine the retrieval and reasoning difficulties of the financial corpus through error analysis in Section~\ref{sec:error_analysis}.

@@ -1,0 +1,110 @@
+\chapter{Error Analysis \& Qualitative Analysis}
+\label{sec:error_analysis}
+We analyze retrieval and reasoning errors on both DataBench and the real-world financial corpus to identify the major failure modes of OLTQA systems.
+The two corpora exhibit different error patterns, allowing us to examine both benchmark-specific issues and practical challenges arising in a real-world financial setting.
+
+\section{DataBench Error Analysis}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrr}
+\hline
+\textbf{Error Type} & \textbf{Count} & \textbf{\% of Errors} \\
+\hline
+Retrieval error & 45 & 22.4\% \\
+Reasoning error & 156 & 77.6\% \\
+\quad Selected wrong table & 48 & 23.9\% \\
+\quad No valid table selection & 54 & 26.9\% \\
+\quad Gold table selected, final answer wrong & 54 & 26.9\% \\
+\hline
+Total & 201 & 100.0\% \\
+\hline
+\end{tabular}
+\caption{Error distribution of our method on DataBench. Percentages are calculated over the $201$ incorrectly answered queries. The three reasoning-error categories partition the $156$ reasoning errors.}
+\label{tab:databench_error_distribution}
+\end{table}
+
+Among the $522$ evaluated DataBench queries, our method correctly answers $321$ queries and produces $201$ incorrect answers.
+We first categorize the incorrect cases according to whether the failure occurs during corpus-level table retrieval or downstream reasoning.
+Table~\ref{tab:databench_error_distribution} summarizes the resulting error distribution.
+
+
+\paragraph{Retrieval Errors.}
+Retrieval errors account for $45$ of the $201$ incorrect answers ($22.4\%$).
+Qualitative analysis reveals two major failure patterns.
+Some questions become ambiguous when DataBench is converted from its original closed-domain setting to an open-domain setting, as multiple tables can reasonably satisfy the same query.
+We also observe cases in which the gold table contains strong, sometimes nearly exact, schema cues from the query but is nevertheless absent from the retrieved candidates.
+The latter cases indicate remaining limitations in table retrieval even when discriminative schema information is available.
+
+\paragraph{Reasoning Errors.}
+Reasoning errors account for $156$ of the $201$ incorrect answers ($77.6\%$) and exhibit several distinct failure modes.
+For cases in which the reasoner selects an incorrect table, common causes include missing query-relevant information in the initial table context and ambiguity among candidate tables.
+Even when the gold table is selected, missing query-relevant information from the initial table context can prevent the reasoner from correctly deriving the answer, while incorrect Python operations can also lead to erroneous answers.
+We also observe ReAct execution failures in which the agent repeatedly generates invalid operations, such as references to nonexistent columns or incorrectly formatted tool calls, until reaching the maximum reasoning depth.
+Finally, a small number of apparent errors result from mismatches between semantically valid predictions and the automatic evaluator.
+
+Representative examples of the identified failure modes, including retrieval ambiguity, missed schema cues, missing table-context information, and ReAct execution failures, are provided in Appendix~\ref{sec:databench_error_ex}.
+
+\paragraph{Estimated Accuracy Ceiling.}
+The qualitative analysis also reveals errors attributable to dataset ambiguity and evaluation mismatches rather than failures of the OLTQA pipeline itself.
+After excluding cases identified as intrinsically ambiguous or affected by evaluation issues, we estimate an achievable accuracy ceiling of approximately $0.91$ on DataBench.
+This estimate suggests that a portion of the remaining error is attributable to limitations of the derived open-domain benchmark rather than the evaluated system alone.
+
+
+\section{Financial Corpus Error Analysis}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrr}
+\hline
+\textbf{Error Type} & \textbf{Count} & \textbf{\% of Errors} \\
+\hline
+Retrieval error & 70 & 31.4\% \\
+Reasoning error & 153 & 68.6\% \\
+\quad Selected wrong table & 13 & 5.8\% \\
+\quad No valid table selection & 101 & 45.3\% \\
+\quad Gold table selected, final answer wrong & 39 & 17.5\% \\
+\hline
+Total & 223 & 100.0\% \\
+\hline
+\end{tabular}
+\caption{Error distribution of our method on the financial corpus.
+Percentages are calculated over the $223$ incorrectly answered queries.
+The three reasoning-error categories partition the $153$ reasoning errors.}
+\label{tab:financial_error_distribution}
+\end{table}
+
+Among the $283$ evaluated queries in the financial corpus, our method correctly answers $60$ queries and produces $223$ incorrect answers under whitespace-normalized exact match.
+We categorize the incorrect cases using the same retrieval--reasoning decomposition as in the DataBench analysis.
+Table~\ref{tab:financial_error_distribution} summarizes the resulting error distribution.
+
+\paragraph{Retrieval Errors.}
+Retrieval errors account for $70$ of the $223$ incorrect answers ($31.4\%$).
+Qualitative analysis reveals several challenges arising from the large number of financial tables with highly similar schemas.
+Some queries are ambiguous because multiple tables in the corpus can reasonably provide the requested financial information.
+Unlike the ambiguity observed in DataBench, which often arises because the original closed-domain query lacks sufficient information to uniquely identify its gold table, ambiguity in the financial corpus frequently arises because multiple financial tables provide similar information.
+We also observe queries for which the information needed to distinguish the gold table is primarily contained in cell values, such as entity names, rather than in the table name or column names.
+Such cases expose a limitation of our schema-level table representation, which excludes cell values from corpus-level table retrieval.
+
+\paragraph{Reasoning Errors.}
+Reasoning errors account for $153$ of the $223$ incorrect answers ($68.6\%$).
+A major failure mode is ReAct execution failure.
+The reasoner sometimes generates operations that reference nonexistent columns or contain invalid code or tool-call formats.
+When the reasoner fails to recover from these errors, similar invalid operations may be repeatedly generated until the maximum reasoning depth is reached, resulting in no final answer.
+
+Another failure mode occurs when the reasoner selects an incorrect table from multiple structurally similar financial tables.
+For example, candidate tables may differ primarily in temporal granularity, such as daily versus monthly data, or in data scope, such as summary versus detailed records.
+These distinctions can be difficult to identify from similar table schemas, and in some cases multiple candidate tables can reasonably satisfy the query.
+
+Errors also occur after the gold table has been selected.
+Some financial columns have ambiguous meanings that cannot be reliably inferred from column names alone.
+In other cases, the model fails to correctly map the query semantics to the corresponding table columns or cell values, or generates incorrect SQL operations when accessing the underlying data.
+Finally, some apparent errors are caused by mismatches between the predicted answer and the automatic evaluator, primarily due to differences in numerical units or output formatting.
+
+Representative examples of the identified failure modes are provided in Appendix~\ref{sec:financial_error_ex}.
+
+\paragraph{Estimated Accuracy Ceiling.}
+The qualitative analysis reveals that some apparent errors arise from ambiguity in the query--table relationship or from evaluation mismatches rather than failures of the OLTQA pipeline itself.
+Based on the sampled error analysis, we estimate an achievable accuracy ceiling of approximately $0.83$ after excluding evaluation-related mismatches and accounting for whether the query and available tables provide sufficient information to determine a unique answer.

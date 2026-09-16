@@ -1,0 +1,149 @@
+\chapter{Ablation Study and Analysis}
+\label{sec:analysis}
+\section{Candidate Depth Analysis}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{cccc}
+\hline
+\textbf{Candidate Depth $k$} &
+\textbf{Accuracy} &
+\textbf{R@$k$} &
+\textbf{Input Tokens} \\
+\hline
+1  & 0.47 & 0.65 & 1.30M \\
+5  & 0.57 & 0.83 & 3.92M \\
+10 & \textbf{0.60} & 0.91 & 6.54M \\
+20 & \textbf{0.60} & 0.95 & 12.35M \\
+\hline
+\end{tabular}
+\caption{Effect of candidate depth $k$ on end-to-end accuracy, table retrieval recall, and LLM input-token usage.}
+\label{tab:k_ablation}
+\end{table}
+
+Increasing the candidate depth improves gold-table coverage and provides the reasoner with more opportunities to access the correct table.
+Table~\ref{tab:k_ablation} reports end-to-end accuracy, table retrieval recall, and LLM input-token usage at different candidate depths.
+Increasing $k$ from $1$ to $5$ improves retrieval recall from $0.65$ to $0.83$ and end-to-end accuracy from $0.47$ to $0.57$.
+At $k=10$, retrieval recall further increases to $0.91$, while accuracy reaches $0.60$.
+
+The benefit of increasing candidate depth exhibits diminishing returns.
+Increasing $k$ allows more candidate tables, including the gold table, to remain accessible to the reasoner, but also introduces additional non-gold tables and increases the amount of information processed during reasoning.
+Notably, increasing $k$ from $10$ to $20$ does not further improve accuracy, which remains at $0.60$, while input-token usage increases substantially from $6.54$M to $12.35$M.
+The results therefore reveal a trade-off among gold-table coverage, reasoning difficulty, and inference cost when selecting the candidate depth.
+
+\section{Table Size Analysis}
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lcccccccc}
+\hline
+& \multicolumn{2}{c}{\textbf{Closed-domain}}
+& \multicolumn{2}{c}{\textbf{Ours}}
+& \multicolumn{2}{c}{\textbf{OpenTab+r}}
+& \multicolumn{2}{c}{\textbf{CRAFT}} \\
+\textbf{LLM}
+& $<1$M & $\geq1$M
+& $<1$M & $\geq1$M
+& $<1$M & $\geq1$M
+& $<1$M & $\geq1$M \\
+\hline
+GPT-5.6 Sol
+& 0.88 & 0.80
+& \textbf{0.62} & \textbf{0.55}
+& 0.39 & 0.29
+& 0.27 & 0.26 \\
+
+Gemini-3.7 Flash
+& 0.81 & 0.77
+& \textbf{0.56} & \textbf{0.54}
+& 0.39 & 0.31
+& 0.29 & 0.26 \\
+
+Qwen3.5 9B
+& 0.78 & 0.72
+& \textbf{0.63} & \textbf{0.57}
+& 0.23 & 0.25
+& 0.20 & 0.18 \\
+
+Qwen3.5 4B
+& 0.78 & 0.65
+& \textbf{0.60} & \textbf{0.55}
+& 0.22 & 0.23
+& 0.22 & 0.21 \\
+\hline
+\end{tabular}
+\caption{Accuracy on DataBench stratified by the serialized token size of the gold table. $<1$M and $\geq1$M denote gold tables containing fewer than one million and at least one million tokens, respectively. Closed-domain evaluation directly provides the gold table to the reasoner.}
+\label{tab:table_size_analysis}
+\end{table*}
+
+We further analyze end-to-end performance with respect to the size of the gold table on DataBench.
+We divide the evaluation queries into two subsets according to whether the fully serialized gold table contains fewer than one million tokens or at least one million tokens.
+Table~\ref{tab:table_size_analysis} reports the accuracy of each method on the two subsets across all evaluated LLM backbones.
+
+Overall performance generally decreases as the gold-table size increases.
+Our approach achieves lower accuracy on the $\geq1$M-token subset across all four LLM backbones.
+Despite the decrease, our approach remains the best-performing end-to-end OLTQA method on the $\geq1$M-token subset across all evaluated LLMs.
+
+The closed-domain results provide clearer evidence of the difficulty introduced by large tables.
+Even when the gold table is directly provided, accuracy consistently decreases on the $\geq1$M-token subset across all four LLM backbones.
+
+In contrast, OpenTab+r and CRAFT do not exhibit a consistent size-dependent degradation across all LLMs.
+Their performance remains low even on the $<1$M-token subset, indicating that their weak end-to-end performance on DataBench is not confined to tables exceeding the one-million-token threshold.
+As shown in Table~\ref{tab:dataset_comparison}, DataBench contains substantially larger tables on average than the benchmarks previously used to evaluate these methods.
+Therefore, tables in the $<1$M-token subset may still be considerably larger than those encountered in their original evaluation settings, despite falling below our operational large-table threshold.
+
+
+\section{Token Efficiency Analysis}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lc}
+\hline
+\textbf{Method} & \textbf{Input Tokens} \\
+\hline
+OpenTab+r & 12.46M \\
+CRAFT     & 6.75M \\
+\hline
+Ours      & \textbf{6.54M} \\
+\hline
+\end{tabular}
+\caption{Total generative LLM input-token usage of the evaluated OLTQA pipelines on DataBench.}
+\label{tab:token_efficiency}
+\end{table}
+
+Our method remains competitive in LLM input-token usage despite performing multi-candidate and interactive reasoning.
+Table~\ref{tab:token_efficiency} compares the total generative LLM input tokens consumed by the evaluated OLTQA pipelines.
+OpenTab~\cite{opentab} and OpenTab+r consume $19.31$M and $12.46$M input tokens, respectively, while CRAFT~\cite{craft} consumes $6.75$M.
+Our method consumes $6.54$M input tokens, remaining competitive with the evaluated baselines despite allowing the reasoner to interact with multiple candidate tables.
+
+This difference may partly reflect the additional LLM-based processing required by the baseline pipelines.
+OpenTab uses an LLM-based coder for SQL generation, while CRAFT uses LLM-based table enrichment before downstream answer generation.
+In contrast, our pipeline does not require separate SQL-generation or table-enrichment stages.
+
+
+\section{Interactive Table Access Analysis}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lc}
+\hline
+\textbf{Method} & \textbf{Accuracy} \\
+\hline
+Ours (Interactive) & \textbf{0.61} \\
+Ours (Static)      & 0.25 \\
+\hline
+\end{tabular}
+\caption{Ablation of interactive table access on DataBench using Qwen3.5 9B. The static variant disables access to additional table information during reasoning while retaining the same initial table context.}
+\label{tab:interactive_ablation}
+\end{table}
+
+We analyze the importance of interactive table access for reasoning over large tables by comparing our full method with a static variant.
+The static variant uses the same initial table context as our full method but disables programmatic access to additional table information during reasoning.
+This comparison isolates the contribution of interactive table access while keeping the initial table context unchanged.
+
+As shown in Table~\ref{tab:interactive_ablation}, disabling interactive table access reduces accuracy substantially from $0.61$ to $0.25$.
+The large performance decrease indicates that the initial table context alone is insufficient for many queries and that access to additional table information during reasoning is important for successful OLTQA over large tables.
+Interactive table access allows the reasoner to obtain additional information when the initially constructed context does not contain sufficient information for answering the query.

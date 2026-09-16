@@ -1,11 +1,47 @@
 % !TeX root = ../main.tex
 
-\chapter{Methodology}
+\chapter{Problem Definition}
 
-\section{史記}
+\section{Open-Domain Table Question Answering (OTQA)}
+We formulate OTQA as the task of answering a natural-language question by first retrieving relevant tables from a corpus and then reasoning over the retrieved candidates to produce the final answer.
+Let $\mathcal{D}=\{T_1,T_2,\ldots,T_N\}$ denote a corpus containing $N$ tables, and let $q$ denote a natural-language question.
+The task objective is to generate an answer $a$ given the query $q$ and the table corpus $\mathcal{D}$.
 
-\zhlipsum[name=xiangyu]
+In OTQA, each query $q$ is associated with at least one gold table in the corpus $\mathcal{D}$ that contains the information required to answer the query.
+A table retriever $R$ takes $q$ and $\mathcal{D}$ as input and returns a ranked set of $k$ candidate tables:
 
-\section{山海經}
+\[
+R(q,\mathcal{D})
+= \{T_1^q,T_2^q,\ldots,T_k^q\}.
+\]
 
-\zhlipsum[name=nanshanjing]
+After table retrieval, information from the retrieved candidate tables is selected and organized into a table context for reasoning.
+Let $C(q,R(q,\mathcal{D}))$ denote the table context constructed from the retrieved candidates.
+Depending on the reasoning method, the table context may be constructed once before reasoning or dynamically updated by accessing additional information from the retrieved candidate tables during reasoning.
+
+A table reasoner $G$ then generates the final answer $a$ based on the query and the resulting table context:
+
+\[
+a = G\bigl(q, C(q,R(q,\mathcal{D}))\bigr).
+\]
+
+\section{Large Table}
+\label{sec:large_table}
+Inspired by TableRAG~\cite{tablerag}, we consider a table large when its full serialization is impractical to provide directly to an LLM for reasoning.
+Directly serializing an entire table into the reasoning context provides the model with complete access to the table information.
+However, as table size increases, full serialization becomes increasingly impractical: the resulting input may approach or exceed the context window of the LLM, while also introducing substantial query-irrelevant information and increasing inference cost.
+Therefore, reasoning over large tables generally requires reducing the amount of table information presented to the model rather than directly providing the complete table.
+
+This requirement introduces a central challenge in large-table reasoning.
+Reducing the amount of table context provided to the LLM may omit information required to answer the query. Such information loss can leave the reasoner with insufficient information to correctly derive the answer.
+
+More specifically, we define a table as large when its full serialization exceeds one million tokens, measured using a byte-pair encoding (BPE) tokenizer~\footnote{\url{https://github.com/openai/tiktoken}}.
+We adopt this threshold because modern frontier LLMs commonly support context windows on the order of one million tokens~\footnote{\url{https://artificialanalysis.ai/models\#context-window}}.
+The threshold therefore serves as an operational boundary for identifying tables whose full serialization approaches or exceeds the practical scale of current LLM reasoning contexts.
+
+
+
+\section{Open-Domain Large-Table Question Answering (OLTQA)}
+Combining the definitions of OTQA and large tables, we define OLTQA as an OTQA setting in which a substantial proportion of the tables in the corpus are large.
+As in standard OTQA, the system must first identify candidate tables from the corpus and then reason to produce the final answer.
+Consequently, OLTQA introduces the challenges of both retrieving and reasoning over large tables in an open-domain setting.

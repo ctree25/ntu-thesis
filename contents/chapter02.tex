@@ -2,25 +2,58 @@
 
 \chapter{Related Work}
 
-\section{出師表}
+\section{Closed-Domain Table Question Answering (CTQA)}
+In a CTQA system, a gold table and a natural-language query are provided as input, and the system reasons over the given table to produce an answer.
 
-臣亮言：先帝創業未半，而中道崩殂。今天下三分，益州疲弊，此誠危急存亡之秋也。然侍衛之臣，不懈於內；忠志之士，忘身於外者，蓋追先帝之殊遇，欲報之於陛下也。誠宜開張聖聽，以光先帝遺德，恢弘志士之氣；不宜妄自菲薄，引喻失義，以塞忠諫之路也。宮中府中，俱為一體，陟罰臧否，不宜異同。若有作姦犯科，及為忠善者，宜付有司，論其刑賞，以昭陛下平明之治，不宜篇私，使內外異法也。\par
+Earlier CTQA methods often relied on fine-tuning specialized models for table understanding and reasoning~\cite{tapas,tapex}. With the emergence of large language models, subsequent approaches have increasingly leveraged their reasoning capabilities through in-context learning~\cite{reactable,chainoftable}, achieving strong performance without task-specific fine-tuning.
 
-侍中、侍郎郭攸之、費褘、董允等，此皆良實，志慮忠純，是以先帝簡拔以遺陛下。愚以為宮中之事，事無大小，悉以咨之，然後施行，必能裨補闕漏，有所廣益。將軍向寵，性行淑均，曉暢軍事，試用於昔日，先帝稱之曰「能」，是以眾議舉寵為督。愚以為營中之事，悉以咨之，必能使行陣和睦，優劣得所。親賢臣，遠小人，此先漢所以興隆也；親小人，遠賢臣，此後漢所以傾頹也。先帝在時，每與臣論此事，未嘗不歎息痛恨於桓、靈也。侍中、尚書、長史；參軍，此悉貞良死節之臣也，願陛下親之信之，則漢室之隆，可計日而待也。
+As table size increases, reasoning over tables becomes increasingly challenging due to the growing amount of table content that must be processed.
+H-STAR~\cite{hstar} reduces the amount of table context processed during reasoning through step-wise table extraction, selecting query-relevant columns and rows from the given table before reasoning.
+However, its extraction process remains constrained by the LLM context window and truncates table rows when the input exceeds the context limit.
 
-臣本布衣，躬耕於南陽，苟全性命於亂世，不求聞達於諸侯。先帝不以臣卑鄙，猥自枉屈，三顧臣於草廬之中，諮臣以當世之事，由是感激，遂許先帝以驅馳。後值傾覆，受任於敗軍之際，奉命於危難之間，爾來二十有一年矣！先帝知臣謹慎，故臨崩寄臣以大事也。受命以來，夙夜憂勤，恐託付不效，以傷先帝之明。故五月渡瀘，深入不毛。今南方已定，兵甲已足，當獎率三軍，北定中原，庶竭駑鈍，攘除奸凶，興復漢室，還於舊都；此臣所以報先帝而忠陛下之職分也。至於斟酌損益，進盡忠言，則攸之、褘、允之任也。
+Other work has explicitly addressed reasoning over tables that cannot be directly accommodated within the LLM context.
+TableRAG~\cite{tablerag} more explicitly targets large-table reasoning by retrieving query-relevant schema and cell information from the table, avoiding the need to place the full table content in the reasoning context.
 
-願陛下託臣以討賊興復之效；不效，則治臣之罪，以告先帝之靈。若無興德之言，則戮允等，以彰其慢。陛下亦宜自課，以諮諏善道，察納雅言，深追先帝遺詔，臣不勝受恩感激。
+Despite advances in large-table reasoning, CTQA methods assume that the gold table is already given.
+In practical applications, however, users may not know which table contains the information required to answer a query.
+An end-to-end system must therefore identify candidate tables from a corpus before performing table reasoning, introducing a corpus-level table retrieval challenge that is absent from CTQA.
 
-今當遠離，臨表涕泣，不知所云。
 
-\section{短歌行}
 
-對酒當歌，人生幾何！譬如朝露，去日苦多。
-慨當以慷，憂思難忘。何以解憂？唯有杜康。
-青青子衿，悠悠我心。但為君故，沉吟至今。
-呦呦鹿鳴，食野之苹。我有嘉賓，鼓瑟吹笙。
-明明如月，何時可掇？憂從中來，不可斷絕。
-越陌度阡，枉用相存。契闊談宴，心念舊恩。
-月明星稀，烏鵲南飛。繞樹三匝，何枝可依？
-山不厭高，海不厭深。周公吐哺，天下歸心。
+\section{Open-Domain Table Question Answering (OTQA)}
+Unlike CTQA, OTQA systems first retrieve query-relevant tables from a corpus and then perform reasoning over the retrieved tables.
+
+Earlier OTQA methods relied on task-specific training for table retrieval and question answering~\cite{cltr,lirage}. With the emergence of large language models, subsequent approaches have increasingly adopted training-free pipelines for OTQA~\cite{opentab,craft}. CRAFT~\cite{craft}, for example, outperforms prior dataset-specific baselines without fine-tuning.
+
+CRAFT~\cite{craft} improves OTQA through cascaded table retrieval and reranking.
+For table reasoning, CRAFT constructs a compressed table context using the top query-relevant rows from the retrieved tables.
+Although this design has been evaluated primarily on benchmarks with relatively small individual tables, the resulting table context may omit information required to answer the query when applied to large tables.
+Missing information in the table context can leave the reasoner with insufficient information to correctly derive the answer.
+
+OpenTab~\cite{opentab} explicitly considers scalability in OTQA.
+However, it does not systematically evaluate table retrieval and reasoning in a large-table setting.
+For table retrieval, OpenTab uses full table content to represent each table, which may incorporate substantial query-irrelevant cell-level information, dilute query-relevant semantic signals, and consequently reduce retrieval effectiveness when applied to large tables.
+For table reasoning, OpenTab similarly relies on a preconstructed table context, which may omit necessary information when applied to large tables and leave the reasoner with insufficient information to correctly derive the answer.
+
+Although existing OTQA systems have considered scalability, OTQA over large tables has not been systematically studied in terms of both table retrieval and reasoning.
+
+\section{OTQA Benchmarks}
+Existing OTQA benchmarks primarily emphasize the scale of the table corpus rather than the size of individual tables.
+NQ-TABLES~\cite{nqtables} is an OTQA benchmark constructed from Wikipedia tables.
+Open-WikiTable~\cite{openwikitable} further evaluates complex question answering over tables.
+However, individual tables in both benchmarks remain relatively small.
+In contrast, large-table benchmarks such as DataBench~\cite{databench} focus on reasoning over large individual tables under the CTQA setting, where the gold table is already provided.
+Consequently, corpus-level table retrieval and large-table reasoning have been studied separately, leaving their intersection---OLTQA---underexplored.
+To address this benchmark gap, we derive an OLTQA dataset from DataBench for open-domain evaluation.
+
+\section{Open-Domain Text-to-SQL}
+Open-domain Text-to-SQL shares a similar pipeline with OTQA, as both tasks require identifying question-relevant tables and schema elements from a corpus before performing downstream reasoning~\cite{text2sql}.
+However, Text-to-SQL aims to generate an executable SQL program from a natural-language query, with the SQL program itself serving as the target output.
+In contrast, OTQA evaluates the correctness of the final answer, while SQL may serve as an intermediate tool for querying tables and supporting downstream reasoning.
+Due to this difference in task objective and output, we regard open-domain Text-to-SQL as a related retrieval and executable reasoning paradigm but do not provide an extensive review of this research area.
+
+\section{Retrieval Augmented Generators (RAG)}
+OLTQA is closely related to retrieval-augmented generation (RAG), as both paradigms retrieve external information to support downstream language-model reasoning.
+General RAG methods retrieve information from external knowledge sources and augment the language-model input with the retrieved content~\cite{rag,atlas}.
+While general RAG methods primarily operate over unstructured text, OLTQA applies the retrieval-augmented paradigm to structured tables and requires table-specific mechanisms for table retrieval, table context selection, and downstream reasoning.
+We therefore regard RAG as a broader methodological foundation of OLTQA while focusing our experimental comparison on methods specifically designed for table QA.

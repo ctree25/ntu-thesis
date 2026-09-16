@@ -1,13 +1,73 @@
 % !TeX root = ../main.tex
 
-\chapter{Experimental Setup}
+\chapter{Proposed Approach}
+~\label{sec:method}
 
-\section{出師表}
+\begin{figure*}[t]
+    \centering
+    \includegraphics[
+        width=1\textwidth,
+        keepaspectratio
+    ]{pipeline_overview.png}
+    \caption{Overview of our OLTQA pipeline. Retriever selects the top-$k$ candidates from the corpus. Multi-table reasoner then uses the query and retrieved candidates to generate the final answer.}
+    \label{fig:method_overview}
+\end{figure*}
 
-\lipsum
+To address the retrieval and reasoning challenges of OLTQA, our framework consists of a table retriever using schema-level table representations, followed by an interactive multi-table reasoner, as illustrated in Figure~\ref{fig:method_overview}.
 
-\section{短歌行}
+\section{Table Retriever}
+\paragraph{Table Representation.} 
+We construct a schema-level table representation for each table using its table name and column names.
+For an $m$-column table $T \in \mathcal{D}$, let $\operatorname{name}(T)$ denote its table name and $\{c_1,c_2,\ldots,c_m\}$ its column names.
+We construct the representation of $T$ as a string in the following format:
 
-\lipsum
+\begin{align*}
+I(T) = \texttt{"Table: } \operatorname{name}(T).
+\quad \texttt{Columns: } c_1,c_2,\ldots,c_m.\texttt{"}
+\end{align*}
 
-This is just to test \cite{Krasnogor2004e} the cite function.
+Some existing OTQA methods represent tables using not only schema information but also cell values from the table~\cite{opentab}.
+We refer to this representation strategy as a full-content table representation.
+Although incorporating cell values can provide additional signals for table retrieval, existing OTQA benchmarks primarily contain relatively small individual tables.
+When applied to large tables, a full-content table representation may incorporate a substantial amount of query-irrelevant cell-level information, potentially diluting query-relevant semantic signals.
+In contrast, our schema-level table representation $I(T)$ excludes cell values and retains only the table name and column names for table retrieval.
+
+
+\paragraph{Hybrid Retrieval.}
+We employ a hybrid retrieval strategy that combines BM25-based sparse retrieval with dense retrieval.
+Sparse retrieval captures lexical overlap between queries and table representations, while dense retrieval captures semantic similarity beyond exact term matching.
+
+For each query, the sparse retrieval scores and dense similarity scores are independently normalized using min--max normalization and then combined through a weighted sum:
+
+\begin{align*}
+s_{\mathrm{hybrid}}(q,I(T))
+& = \alpha s_{\mathrm{dense}}(q,I(T))
++ (1-\alpha)s_{\mathrm{sparse}}(q,I(T)),
+\end{align*}
+
+where $s_{\mathrm{dense}}$ and $s_{\mathrm{sparse}}$ denote the normalized dense and sparse scores, respectively.
+We set $\alpha=0.5$.
+Given a query $q$, tables are ranked according to $s_{\mathrm{hybrid}}(q,I(T))$, and the top-$k$ tables are returned as candidate tables for downstream reasoning.
+
+\section{Table Reasoner}
+Our table reasoner builds upon the reasoning framework of TableRAG~\cite{tablerag}, in which an LLM agent interacts with a table programmatically to answer a given query.
+While TableRAG operates in a CTQA setting with a single gold table, we extend the framework to an OTQA setting where multiple retrieved candidate tables are available to the reasoner.
+
+\paragraph{Table Context Construction.}
+Before reasoning, we construct an initial table context containing query-relevant information from each candidate table.
+Following TableRAG~\cite{tablerag}, we first perform query expansion to generate schema and cell-value queries, which are subsequently used for schema retrieval and cell retrieval, respectively.
+Schema retrieval retrieves query-relevant column names together with their data types and example values, while cell retrieval retrieves query-relevant column--value pairs.
+The retrieved schema information and cell values are then organized into the initial table context provided to the reasoner.
+
+\paragraph{Multi-table Reasoning.}
+Rather than restricting the reasoner to the top-ranked table, we construct the initial table context using information from the top-$k$ retrieved candidate tables.
+This multi-candidate design allows the reasoner to determine which candidate table contains the information required to answer the query and provides an opportunity to recover from retrieval ranking errors when the gold table is retrieved but not ranked first.
+Increasing $k$ can improve the likelihood that the gold table is included among the candidate tables, but also increases the amount of information processed by the reasoner and the associated token usage.
+We analyze the trade-off among candidate coverage, reasoning performance, and token usage in Section~\ref{...}.
+
+\paragraph{Interactive Table Access.}
+Some existing OTQA methods construct a fixed table context before reasoning and rely on the preconstructed context throughout the reasoning process~\cite{opentab,craft}.
+When query-relevant information is omitted from the initial table context, the reasoner has no mechanism to access the omitted table information during reasoning.
+This limitation is particularly relevant to OLTQA, where large tables may require reducing the amount of table information provided to the reasoner.
+To reduce the dependence on the completeness of the initial table context, we retain the interactive table access mechanism of TableRAG~\cite{tablerag}.
+During reasoning, the LLM agent can programmatically interact with the candidate tables and access additional table information as needed.

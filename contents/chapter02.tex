@@ -47,7 +47,7 @@ Consequently, corpus-level table retrieval and large-table reasoning have been s
 To address this benchmark gap, we derive an OLTQA dataset from DataBench for open-domain evaluation.
 
 \section{Open-Domain Text-to-SQL}
-Open-domain Text-to-SQL shares a similar pipeline with OTQA, as both tasks require identifying query-relevant tables and schema elements from a corpus before performing reasoning stage~\cite{text2sql}.
+Open-domain Text-to-SQL shares a similar pipeline with OTQA, as both tasks require identifying query-relevant tables and schema elements from a corpus before entering the reasoning stage~\cite{text2sql}.
 However, Text-to-SQL aims to generate an executable SQL program from a natural-language query, with the SQL program itself serving as the target output.
 In contrast, OTQA evaluates the correctness of the final answer, while SQL may serve as an intermediate tool for querying tables and supporting reasoning stage.
 Due to this difference in task objective and output, we regard open-domain Text-to-SQL as a related retrieval and executable reasoning paradigm but do not provide an extensive review of this research area.

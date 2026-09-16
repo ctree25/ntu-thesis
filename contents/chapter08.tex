@@ -33,7 +33,7 @@ Table~\ref{tab:databench_error_distribution} summarizes the resulting error dist
 \paragraph{Retrieval Errors.}
 Retrieval errors account for $45$ of the $201$ incorrect answers ($22.4\%$).
 Qualitative analysis reveals two major failure patterns.
-Some questions become ambiguous when DataBench is derived from its original closed-domain setting to an open-domain setting, as multiple tables can reasonably satisfy the same query.
+Because DataBench queries were originally written for a closed-domain setting where the gold table is given, some queries lack sufficient information to uniquely identify the intended table in the open-domain setting derived from DataBench.
 We also observe cases in which the gold table contains strong, sometimes nearly exact, schema cues from the query but is nevertheless absent from the retrieved candidates.
 The latter cases indicate remaining limitations in table retrieval even when discriminative schema information is available.
 

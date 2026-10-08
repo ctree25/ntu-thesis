@@ -147,3 +147,114 @@ This comparison isolates the contribution of interactive table access while keep
 As shown in Table~\ref{tab:interactive_ablation}, disabling interactive table access reduces accuracy substantially from $0.61$ to $0.25$.
 The large performance decrease indicates that the initial table context alone is insufficient for many queries and that access to additional table information during reasoning is important for successful OLTQA over large tables.
 Interactive table access allows the reasoner to obtain additional information when the initially constructed context does not contain sufficient information for answering the query.
+
+
+\section{Retriever Ablation Study}
+\label{sec:retriever_ablation}
+
+To evaluate the contribution of the hybrid retrieval strategy, we compare BM25 sparse retrieval, dense retrieval using \texttt{sentence-transformers/all-mpnet-base-v2}, and their hybrid combination while keeping the schema-level table representation fixed.
+
+\begin{table}[t]
+\centering
+\caption{Ablation study of retrieval algorithms on the DataBench test set using schema-level table representations.}
+\label{tab:retriever_ablation}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Retriever} &
+\textbf{R@1} &
+\textbf{R@3} &
+\textbf{R@5} &
+\textbf{R@10} \\
+\midrule
+BM25
+& 0.56 & 0.66 & 0.72 & 0.80 \\
+Dense (all-mpnet-base-v2)
+& 0.56 & 0.72 & \textbf{0.83} & 0.90 \\
+Hybrid (BM25 + all-mpnet-base-v2)
+& \textbf{0.65} & \textbf{0.77} & \textbf{0.83} & \textbf{0.91} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:retriever_ablation} compares the retrieval performance of different retrieval algorithms under the same schema-level table representation.
+Hybrid retrieval achieves the highest Recall@1 of 0.65, compared with 0.56 for both BM25 and dense retrieval. It also achieves the highest Recall@3 and Recall@10, while matching dense retrieval at Recall@5.
+
+These results indicate that combining sparse and dense retrieval improves top-ranked table retrieval performance, although the gains become smaller at larger candidate depths.
+
+\paragraph{Dense Embedding Model Comparison.}
+
+We additionally evaluate a more recent dense embedding model, \texttt{jinaai/jina-embeddings-v4}~\footnote{\url{https://huggingface.co/jinaai/jina-embeddings-v4}}, to examine the sensitivity of our hybrid retriever to the choice of dense encoder.
+We compare it with the original \texttt{sentence-transformers/all-mpnet-base-v2} under the same hybrid retrieval framework.
+This comparison is conducted as a supplementary analysis on the DataBench test set, rather than as part of development-set model selection.
+
+\begin{table}[t]
+\centering
+\caption{Comparison of dense embedding models in our hybrid retriever on the DataBench test set. Both configurations use BM25 and schema-level table representations.}
+\label{tab:embedding_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Dense Encoder} &
+\textbf{R@1} &
+\textbf{R@3} &
+\textbf{R@5} &
+\textbf{R@10} \\
+\midrule
+all-mpnet-base-v2
+& \textbf{0.65} & \textbf{0.77} & \textbf{0.83} & \textbf{0.91} \\
+jina-embeddings-v4
+& 0.53 & 0.66 & 0.72 & 0.81 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As shown in Table~\ref{tab:embedding_comparison}, the hybrid retriever using \texttt{sentence-transformers/all-mpnet-base-v2} achieves higher recall across all evaluated candidate depths.
+In particular, Recall@1 decreases from 0.65 to 0.53 when replacing \texttt{sentence-transformers/all-mpnet-base-v2} with \texttt{jinaai/jina-embeddings-v4}.
+
+These results indicate that adopting a more recent embedding model does not necessarily improve retrieval performance in our evaluation setting.
+Since this comparison was conducted as a supplementary analysis after the main experiments, the original embedding configuration remains unchanged, and no additional end-to-end experiments are conducted with \texttt{jinaai/jina-embeddings-v4}.
+
+
+\section{Retrieval--Reasoning Combination Analysis}
+\label{sec:retrieval_reasoning_combination}
+
+Although CRAFT achieves table retrieval recall comparable to our method, its end-to-end QA accuracy is substantially lower. To further investigate this performance gap, we evaluate an additional configuration that combines CRAFT's retriever with our interactive multi-table reasoner.
+
+Specifically, we compare three configurations: the original CRAFT pipeline, our proposed pipeline, and CRAFT's retriever combined with our reasoner (CRAFT+Ours). In CRAFT+Ours, the top-$10$ candidate tables retrieved by CRAFT are passed to our reasoner, which constructs its own initial table context and performs interactive reasoning. All configurations are evaluated on the DataBench test set using Qwen3.5-9B, with a candidate size of $k=10$. All other experimental settings remain consistent with the main experiments.
+
+
+\begin{table}[t]
+\centering
+\caption{Retrieval and end-to-end QA performance of different retrieval--reasoning combinations on the DataBench test set using Qwen3.5-9B ($k=10$).}
+\label{tab:retrieval_reasoning_combination}
+\small
+\begin{tabular}{lllccccc}
+\toprule
+\textbf{Method} &
+\textbf{Retriever} &
+\textbf{Reasoner} &
+\multicolumn{4}{c}{\textbf{Retrieval Recall}} &
+\textbf{E2E Acc.} \\
+\cmidrule(lr){4-7}
+& & &
+\textbf{R@1} &
+\textbf{R@3} &
+\textbf{R@5} &
+\textbf{R@10} & \\
+\midrule
+CRAFT
+& CRAFT & CRAFT
+& 0.56 & 0.78 & 0.86 & 0.92 & 0.20 \\
+Ours
+& Ours & Ours
+& 0.65 & 0.77 & 0.83 & 0.91 & 0.61 \\
+CRAFT+Ours
+& CRAFT & Ours
+& 0.56 & 0.78 & 0.86 & 0.92 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+Table~\ref{tab:retrieval_reasoning_combination} compares the retrieval recall and end-to-end QA accuracy of the three retrieval--reasoning configurations. While CRAFT and our method achieve similar Recall@10, their end-to-end performance differs substantially. The CRAFT+Ours configuration allows us to examine whether this performance gap persists when using the same interactive multi-table reasoner with a different retrieval component.
+
+% TODO: Add the CRAFT+Ours accuracy and discuss the observed result.

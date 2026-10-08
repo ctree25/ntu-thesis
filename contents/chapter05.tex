@@ -252,6 +252,8 @@ However, its end-to-end accuracy remains substantially lower across all evaluate
 CRAFT also constructs a fixed table context for reasoning using all column names and the top-$5$ query-relevant rows from each candidate table.
 Similar to OpenTab, once this context has been constructed, the reasoner cannot dynamically access table information omitted from the context.
 In contrast, our reasoner can interactively access additional information from the candidate tables during reasoning.
+To further investigate this observation, we combine CRAFT's retriever with our interactive multi-table reasoner. The results of this additional experiment are presented in Section~\ref{sec:retrieval_reasoning_combination}.
+
 
 Taken together, these results suggest that retrieving the gold table alone is insufficient for strong OLTQA performance.
 Retaining multiple candidate tables during reasoning can improve gold-table coverage.
@@ -311,3 +313,4 @@ This result suggests that including large amounts of cell-level content in the r
 In contrast, a schema-level table representation provides a more focused representation for table identification.
 
 Overall, the results highlight the importance of both the retrieval algorithm and table representation for table retrieval in OLTQA.
+We further examine the contributions of sparse and dense retrieval to our hybrid retriever in Section~\ref{sec:retriever_ablation}.
